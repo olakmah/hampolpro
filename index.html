@@ -389,6 +389,7 @@ input.inp, textarea.inp{
           <div class="frow"><label>Adres</label><input id="f-address" placeholder="00-000 Miasto Ulica 1A" oninput="saveFirma()"></div>
           <div class="frow"><label>Serwisant</label><input id="f-tech" placeholder="Imię Nazwisko" oninput="saveFirma()"></div>
           <div class="frow"><label>🔄 Revolut (tag lub link)</label><input id="f-revolut" placeholder="@twojnick lub revolut.me/nick" oninput="saveFirma()"></div>
+          <div class="frow"><label>🔑 Klucz API (Anthropic — dla GUS i AI)</label><input id="f-apikey" placeholder="sk-ant-..." type="password" oninput="saveFirma()"></div>
         </div>
 
         <!-- Language & Currency settings -->
@@ -965,8 +966,10 @@ function renderSigs(){
 
 // ── GUS ────────────────────────────────────────────
 async function gusLookup(nip){
-  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:`Znajdź dane firmy z NIP ${nip} w Polsce (CEIDG/KRS). Odpowiedz TYLKO w JSON: {"name":"nazwa","address":"ulica numer, kod miasto"} Jeśli brak: {"name":"","address":""}`}]})});
-  if(!res.ok)throw new Error(res.status);
+  const key=getApiKey();
+  if(!key) throw new Error('Brak klucza API — wpisz go w zakładce Firma');
+  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:`Znajdź dane firmy z NIP ${nip} w Polsce (CEIDG/KRS). Odpowiedz TYLKO w JSON: {"name":"nazwa","address":"ulica numer, kod miasto"} Jesli brak: {"name":"","address":""}`}]})});
+  if(!res.ok)throw new Error('API error: '+res.status);
   const d=await res.json();
   const txt=(d.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
   const m=txt.match(/\{[\s\S]*?"name"[\s\S]*?\}/);
@@ -992,17 +995,19 @@ async function doGUSc(){
 
 // ── AI ─────────────────────────────────────────────
 async function doAI(field){
+  const key=getApiKey();
+  if(!key){toast('⚠️ Wpisz klucz API w zakładce Firma');return;}
   const btn=document.querySelector(field==='fault'?'.ai1':'.ai2'),el=document.getElementById('p-'+field);
-  const orig=btn.textContent;btn.textContent='⏳ Generuję...';btn.disabled=true;
+  const orig=btn.textContent;btn.textContent='⏳...';btn.disabled=true;
   try{
     const prompt=field==='fault'
-      ?`Napisz profesjonalną diagnozę usterki. Urządzenie: ${gv('p-model')||'nieznane'}, usterka: ${gv('p-fault')||'nieznana'}. Tylko tekst po polsku.`
-      :`Przekształć w profesjonalny opis: "${gv('p-notes')}". Urządzenie: ${gv('p-model')||'nieznane'}. Tylko tekst po polsku.`;
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content:prompt}]})});
+      ?`Napisz profesjonalna diagnoze usterki. Urzadzenie: ${gv('p-model')||'nieznane'}, usterka: ${gv('p-fault')||'nieznana'}. Tylko tekst po polsku.`
+      :`Przeksztalc w profesjonalny opis: "${gv('p-notes')}". Urzadzenie: ${gv('p-model')||'nieznane'}. Tylko tekst po polsku.`;
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content:prompt}]})});
     const d=await res.json();
     const txt=(d.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
     if(txt)el.value=txt;
-  }catch(e){el.value='⚠️ AI niedostępne — wpisz ręcznie';}
+  }catch(e){toast('⚠️ AI niedostepne: '+e.message);}
   btn.textContent=orig;btn.disabled=false;
 }
 
@@ -1271,16 +1276,22 @@ function amSave(){
 async function amShare(){
   const item=S.archive.find(x=>x.id===S.curArchId);if(!item)return;
   try{
-    const b64=item.dataUri.split(',')[1],bin=atob(b64),arr=new Uint8Array(bin.length);
+    const b64=item.dataUri.split(',')[1];
+    const bin=atob(b64);
+    const arr=new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
     const blob=new Blob([arr],{type:'application/pdf'});
     const file=new File([blob],'Protokol_'+S.curArchId+'.pdf',{type:'application/pdf'});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
-      await navigator.share({title:'Protokół '+S.curArchId,files:[file]});
-      toast('✅ Wysłano!');closeAM();return;
+      await navigator.share({title:'Protokol '+S.curArchId,files:[file]});
+      toast('✅ Wyslano!');closeAM();return;
     }
+    // Fallback: download
     amSave();
-  }catch(e){if(e.name!=='AbortError')amSave();else closeAM();}
+  }catch(e){
+    if(e.name==='AbortError'){closeAM();}
+    else{amSave();}
+  }
 }
 
 // ── CLIENTS ────────────────────────────────────────
@@ -1339,8 +1350,12 @@ function saveFirma(){
   S.firma={
     name:gv('f-name'),nip:gv('f-nip'),phone:gv('f-phone'),
     email:gv('f-email'),address:gv('f-address'),tech:gv('f-tech'),
-    revolut:gv('f-revolut')
+    revolut:gv('f-revolut'),apikey:gv('f-apikey')
   };
+}
+
+function getApiKey(){
+  return (S.firma.apikey||'').trim();
 }
 
 // Pre-fill Revolut from known default
