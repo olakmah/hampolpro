@@ -964,16 +964,31 @@ function renderSigs(){
   });
 }
 
+// ── API PROXY ──────────────────────────────────────
+// Proxy URL — zmień na swój adres Vercel po wdrożeniu
+const PROXY_URL = 'https://hampolpro.vercel.app/api/proxy';
+
+async function callAI(body){
+  const res = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error('Serwer: ' + res.status);
+  return await res.json();
+}
+
 // ── GUS ────────────────────────────────────────────
 async function gusLookup(nip){
-  const key=getApiKey();
-  if(!key) throw new Error('Brak klucza API — wpisz go w zakładce Firma');
-  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:`Znajdź dane firmy z NIP ${nip} w Polsce (CEIDG/KRS). Odpowiedz TYLKO w JSON: {"name":"nazwa","address":"ulica numer, kod miasto"} Jesli brak: {"name":"","address":""}`}]})});
-  if(!res.ok)throw new Error('API error: '+res.status);
-  const d=await res.json();
-  const txt=(d.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
-  const m=txt.match(/\{[\s\S]*?"name"[\s\S]*?\}/);
-  if(!m)throw new Error('brak danych');
+  const d = await callAI({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 200,
+    tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+    messages: [{ role: 'user', content: `Znajdź dane firmy z NIP ${nip} w Polsce (CEIDG/KRS). Odpowiedz TYLKO w JSON: {"name":"nazwa","address":"ulica numer, kod miasto"} Jesli brak: {"name":"","address":""}` }]
+  });
+  const txt = (d.content || []).filter(c => c.type === 'text').map(c => c.text).join('');
+  const m = txt.match(/\{[\s\S]*?"name"[\s\S]*?\}/);
+  if (!m) throw new Error('brak danych');
   return JSON.parse(m[0]);
 }
 async function doGUS(){
@@ -995,19 +1010,20 @@ async function doGUSc(){
 
 // ── AI ─────────────────────────────────────────────
 async function doAI(field){
-  const key=getApiKey();
-  if(!key){toast('⚠️ Wpisz klucz API w zakładce Firma');return;}
   const btn=document.querySelector(field==='fault'?'.ai1':'.ai2'),el=document.getElementById('p-'+field);
   const orig=btn.textContent;btn.textContent='⏳...';btn.disabled=true;
   try{
     const prompt=field==='fault'
-      ?`Napisz profesjonalna diagnoze usterki. Urzadzenie: ${gv('p-model')||'nieznane'}, usterka: ${gv('p-fault')||'nieznana'}. Tylko tekst po polsku.`
-      :`Przeksztalc w profesjonalny opis: "${gv('p-notes')}". Urzadzenie: ${gv('p-model')||'nieznane'}. Tylko tekst po polsku.`;
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content:prompt}]})});
-    const d=await res.json();
+      ?`Napisz profesjonalna diagnoze usterki. Urzadzenie: ${gv('p-model')||'nieznane'}, usterka: ${gv('p-fault')||'nieznana'}. Tylko tekst po polsku, max 3 zdania.`
+      :`Przeksztalc w profesjonalny opis techniczny: "${gv('p-notes')}". Urzadzenie: ${gv('p-model')||'nieznane'}. Tylko tekst po polsku, max 4 zdania.`;
+    const d = await callAI({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 400,
+      messages: [{ role: 'user', content: prompt }]
+    });
     const txt=(d.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
-    if(txt)el.value=txt;
-  }catch(e){toast('⚠️ AI niedostepne: '+e.message);}
+    if(txt) el.value=txt;
+  }catch(e){ toast('⚠️ AI niedostepne: '+e.message); }
   btn.textContent=orig;btn.disabled=false;
 }
 
