@@ -1,1 +1,646 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HampolPro">
+<title>HampolPro</title>
+<style>
+:root{--cy:#00D4E8;--mg:#E8006A;--bg:#0A0E1A;--tx:#F0F4FF;--tx2:rgba(240,244,255,.6);--tx3:rgba(240,244,255,.35);--card:rgba(255,255,255,.06);--br:rgba(255,255,255,.10);--gn:#00E57A;--rd:#FF4460}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--tx);font-size:15px}
 
+/* LAYOUT */
+#app{position:fixed;top:0;left:0;right:0;bottom:0}
+#hdr{position:absolute;top:0;left:0;right:0;height:54px;background:#0A0E1A;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10}
+#main{position:absolute;top:54px;left:0;right:0;bottom:66px;overflow:hidden}
+#nav{position:absolute;bottom:0;left:0;right:0;height:66px;background:#0A0E1A;border-top:1px solid var(--br);display:flex;z-index:10}
+
+/* PAGES */
+.pg{position:absolute;top:0;left:0;right:0;bottom:0;overflow-y:auto;display:none;-webkit-overflow-scrolling:touch}
+.pg.on{display:block}
+
+/* NAV TABS */
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;cursor:pointer;color:var(--tx3);font-size:9px;font-weight:700;font-family:inherit;letter-spacing:.06em;padding-bottom:8px}
+.tab svg{width:22px;height:22px}
+.tab.on{color:var(--cy)}
+
+/* HEADER */
+.logo{display:flex;align-items:baseline;gap:1px}
+.logo .h1{font-weight:700;font-size:20px;color:var(--tx)}
+.logo .h2{font-weight:300;font-size:14px;color:var(--tx3);letter-spacing:.12em}
+.logo .h3{font-weight:800;font-size:20px;color:var(--cy)}
+.logo .h4{font-weight:300;font-size:11px;color:var(--cy);opacity:.6;letter-spacing:.18em}
+.nbtn{background:rgba(0,212,232,.12);border:1px solid rgba(0,212,232,.3);border-radius:10px;padding:6px 12px;color:var(--cy);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit}
+
+/* CARDS */
+.pad{padding:14px}
+.card{background:var(--card);border:1px solid var(--br);border-radius:16px;padding:16px;margin-bottom:10px}
+.lbl{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase;margin-bottom:8px;display:block}
+
+/* INPUTS */
+.inp{width:100%;border:none;outline:none;background:rgba(255,255,255,.05);border:1px solid var(--br);border-radius:10px;font-family:inherit;font-size:14px;color:var(--tx);padding:10px 12px;caret-color:var(--cy)}
+.inp::placeholder{color:var(--tx3)}
+textarea.inp{resize:none}
+
+/* BUTTONS */
+.btn{width:100%;padding:15px;border-radius:12px;background:linear-gradient(135deg,var(--cy),#00A8BA);color:#000;border:none;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;margin-top:8px}
+.btn.red{background:rgba(255,68,96,.1);color:var(--rd);border:1px solid rgba(255,68,96,.2);font-weight:700;font-size:13px}
+
+/* TYPE TABS */
+.trow{display:flex;gap:4px;margin-bottom:14px;background:rgba(255,255,255,.04);border:1px solid var(--br);border-radius:12px;padding:4px}
+.tbtn{flex:1;padding:7px 2px;border-radius:9px;border:none;background:transparent;color:var(--tx3);font-weight:600;font-size:12px;cursor:pointer;font-family:inherit}
+.tbtn.on{background:linear-gradient(135deg,var(--cy),#00A8BA);color:#000;font-weight:700}
+
+/* PILL */
+.pill{background:rgba(0,229,122,.1);color:var(--gn);border:1px solid rgba(0,229,122,.2);border-radius:7px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+
+/* WORK ROWS */
+.wrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.wqty{width:60px;background:rgba(255,255,255,.06);border:1px solid var(--br);border-radius:8px;padding:8px;font-size:13px;color:var(--tx);border:none;outline:none;font-family:inherit;text-align:center}
+.rrow{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border-radius:9px;padding:8px 12px;margin-top:4px}
+.pinp{width:70px;text-align:right;font-weight:700;border:none;outline:none;background:transparent;font-family:inherit;font-size:14px;color:var(--tx)}
+
+/* PARTS */
+.prow{border-bottom:1px solid var(--br);padding-bottom:10px;margin-bottom:10px}
+.prow:last-child{border:none;margin:0}
+.ptop{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.pname{flex:1;border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:var(--tx)}
+.pname::placeholder{color:var(--tx3)}
+.pqty{width:40px;text-align:center;background:rgba(255,255,255,.06);border-radius:7px;padding:5px;font-size:12px;font-weight:700;border:none;outline:none;font-family:inherit;color:var(--tx)}
+.pdel{background:none;border:none;color:var(--rd);font-size:16px;cursor:pointer;padding:2px}
+
+/* SUMMARY */
+.srow{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px solid var(--br);color:var(--tx2)}
+.stot{display:flex;justify-content:space-between;padding:8px 0 0;margin-top:4px;font-size:15px;font-weight:900;color:var(--cy)}
+
+/* PAY BUTTONS */
+.pbtn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;border-radius:12px;border:1px solid var(--br);background:var(--card);cursor:pointer;font-family:inherit;text-align:center;flex:1}
+.pbtn.on{border-color:var(--cy);background:rgba(0,212,232,.1)}
+.pbtn .pi{font-size:20px;line-height:1}
+.pbtn .pl{font-size:9px;font-weight:700;color:var(--tx3);letter-spacing:.04em}
+.pbtn.on .pl{color:var(--cy)}
+
+/* SIGNATURES */
+.sigs{display:flex;gap:12px}
+.sigw{flex:1;display:flex;flex-direction:column;gap:5px}
+.sigbox{border:2px dashed var(--br);border-radius:12px;height:80px;background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}
+.sigbox.ok{border-color:var(--cy);background:rgba(0,212,232,.05)}
+.sighint{font-size:10px;color:var(--tx3);font-weight:600;text-align:center}
+.siglr{display:flex;justify-content:space-between;align-items:center}
+.sigl{font-size:10px;color:var(--cy);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.sigclr{background:none;border:none;font-size:10px;color:var(--tx3);cursor:pointer;font-family:inherit}
+
+/* IDBADGE */
+.idbadge{background:rgba(0,212,232,.1);color:var(--cy);border:1px solid rgba(0,212,232,.2);border-radius:7px;padding:4px 10px;font-size:12px;font-weight:700}
+
+/* LISTS */
+.cc,.ac{background:var(--card);border:1px solid var(--br);border-radius:14px;padding:12px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;width:40px;height:40px;font-size:13px}
+.ai-ic{width:40px;height:40px;background:rgba(0,212,232,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.chev{color:var(--tx3);font-size:18px;flex-shrink:0}
+.dadd{border:2px dashed rgba(0,212,232,.3);border-radius:12px;padding:14px;text-align:center;color:var(--cy);font-weight:700;font-size:13px;cursor:pointer;background:rgba(0,212,232,.04);margin-bottom:10px}
+.sbox{background:var(--card);border:1px solid var(--br);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.sbox input{flex:1;border:none;outline:none;font-family:inherit;font-size:13px;background:transparent;color:var(--tx)}
+.sbox input::placeholder{color:var(--tx3)}
+.empty{text-align:center;padding:40px 0;color:var(--tx3);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+
+/* FIRMA */
+.lup{width:90px;height:90px;background:var(--card);border:1px solid var(--br);border-radius:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;margin-bottom:8px}
+.frow{padding:10px 0;border-bottom:1px solid var(--br)}
+.frow:last-child{border:none}
+.frow label{display:block;font-size:10px;color:var(--tx3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.frow input{width:100%;border:none;outline:none;background:transparent;font-family:inherit;font-size:14px;color:var(--tx)}
+
+/* SERR */
+.serr{background:rgba(255,68,96,.08);color:var(--rd);border:1px solid rgba(255,68,96,.2);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:12px;font-weight:600;display:none}
+
+/* TOAST */
+#toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(10,14,26,.95);border:1px solid var(--br);color:var(--tx);padding:12px 18px;border-radius:12px;font-size:12px;font-weight:600;display:none;z-index:9999;max-width:90%;text-align:center}
+
+/* MODALS */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;flex-direction:column;justify-content:flex-end}
+.modal.on{display:flex}
+.msheet{background:#0F1525;border-top-left-radius:20px;border-top-right-radius:20px;max-height:88vh;display:flex;flex-direction:column;border-top:1px solid var(--br)}
+.mhdr{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--br);flex-shrink:0}
+.mhdr span{font-weight:800;font-size:16px}
+.mhdr button{background:rgba(255,255,255,.08);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--tx2)}
+.mbody{overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch}
+.sinp{width:100%;padding:10px 12px;background:rgba(255,255,255,.06);border:1px solid var(--br);border-radius:10px;font-family:inherit;font-size:13px;color:var(--tx);outline:none}
+.sinp:focus{border-color:var(--cy)}
+
+/* SIG MODAL */
+#sig-modal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9000;display:none;flex-direction:column;justify-content:flex-end}
+#sig-modal.on{display:flex}
+#sig-sheet{background:#0F1525;border-top-left-radius:20px;border-top-right-radius:20px;display:flex;flex-direction:column;height:80vh;border-top:1px solid var(--br)}
+.shandle{width:32px;height:3px;background:var(--br);border-radius:99px;margin:10px auto;flex-shrink:0}
+.shdr{padding:8px 16px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--br);flex-shrink:0}
+.sbtn{background:rgba(255,255,255,.08);border:1px solid var(--br);border-radius:8px;padding:6px 14px;color:var(--tx2);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.scw{flex:1;position:relative;margin:8px 14px;border:1px solid var(--br);border-radius:14px;overflow:hidden;background:#ffffff}
+#sigcv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block;background:#ffffff}
+
+/* NIPROW */
+.niprow{display:flex;gap:8px;align-items:center}
+.gmsg{font-size:11px;margin-top:4px;font-weight:600}.gmsg.ok{color:var(--gn)}.gmsg.err{color:var(--rd)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hdr">
+    <div class="logo">
+      <span class="h1">h</span><span class="h2">ampol</span><span class="h3">P</span><span class="h4">ro</span>
+    </div>
+    <button class="nbtn" onclick="newProto()">+ NOWY</button>
+  </div>
+
+  <div id="main">
+    <!-- PROTOKÓŁ -->
+    <div class="pg on" id="pg-protokol">
+      <div class="pad">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span class="idbadge" id="pid"></span>
+          <span style="font-size:12px;color:var(--tx3)" id="pdate"></span>
+        </div>
+        <div class="trow">
+          <button class="tbtn on" onclick="setTyp(this,'Naprawa')">Naprawa</button>
+          <button class="tbtn" onclick="setTyp(this,'Przegląd')">Przegląd</button>
+          <button class="tbtn" onclick="setTyp(this,'Instalacja')">Instalacja</button>
+          <button class="tbtn" onclick="setTyp(this,'Dostawa')">Dostawa</button>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span class="lbl" style="margin:0">Dane kontrahenta</span>
+            <button style="background:rgba(0,212,232,.1);border:1px solid rgba(0,212,232,.2);border-radius:8px;padding:4px 10px;color:var(--cy);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit" onclick="openPicker()">👥 Z bazy</button>
+          </div>
+          <input class="inp" id="p-name" placeholder="Nazwa Firmy / Klienta" style="margin-bottom:8px;font-size:16px;font-weight:700">
+          <div style="margin-bottom:8px">
+            <div style="font-size:10px;color:var(--tx3);margin-bottom:4px">NIP</div>
+            <input class="inp" id="p-nip" placeholder="000-000-00-00">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Telefon</div><input class="inp" id="p-phone" placeholder="+48 000 000 000" type="tel"></div>
+            <div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">E-mail</div><input class="inp" id="p-email" placeholder="kontakt@firma.pl" type="email"></div>
+          </div>
+          <div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Adres</div><input class="inp" id="p-address" placeholder="ul. Przykładowa 1, 00-001 Miasto"></div>
+        </div>
+        <div class="card">
+          <span class="lbl">Maszyna / Urządzenie</span>
+          <div style="margin-bottom:8px"><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Model</div><input class="inp" id="p-model" placeholder="Model maszyny"></div>
+          <div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Nr seryjny</div><input class="inp" id="p-serial" placeholder="NUMER SERYJNY (S/N)" style="text-transform:uppercase;font-size:12px"></div>
+        </div>
+        <div class="card">
+          <span class="lbl">Czynności i logistyka</span>
+          <div style="margin-bottom:12px">
+            <div class="wrow"><span style="font-weight:700;font-size:13px;flex:1">Czas pracy</span><input class="wqty" id="p-wt" placeholder="h" type="number" min="0" oninput="calcSum()"><button class="pill" id="wpill" onclick="tog('work')">PŁATNE</button></div>
+            <div class="rrow" id="wrate"><span style="font-size:11px;color:var(--tx3);flex:1">Cena netto / h</span><input class="pinp" id="p-wr" placeholder="0.00" type="number" min="0" oninput="calcSum()"><span style="font-size:12px;color:var(--tx3)">zł</span></div>
+          </div>
+          <div>
+            <div class="wrow"><span style="font-weight:700;font-size:13px;flex:1">Dojazd (km)</span><input class="wqty" id="p-tr" placeholder="km" type="number" min="0" oninput="calcSum()"><button class="pill" id="tpill" onclick="tog('travel')">PŁATNE</button></div>
+            <div class="rrow" id="trate"><span style="font-size:11px;color:var(--tx3);flex:1">Cena netto / km</span><input class="pinp" id="p-trr" placeholder="0.00" type="number" min="0" oninput="calcSum()"><span style="font-size:12px;color:var(--tx3)">zł</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <span class="lbl">Usterka / Diagnoza</span>
+          <textarea class="inp" id="p-fault" placeholder="Opis usterki..." style="height:70px"></textarea>
+        </div>
+        <div class="card">
+          <span class="lbl">Notatki serwisowe</span>
+          <textarea class="inp" id="p-notes" placeholder="Co zostało zrobione..." style="height:90px"></textarea>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span class="lbl" style="margin:0">Użyte części</span>
+            <button style="background:none;border:none;color:var(--cy);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit" onclick="addPart()">+ DODAJ</button>
+          </div>
+          <div id="plist"><div style="color:var(--tx3);font-size:12px;text-align:center;padding:8px 0">Brak części</div></div>
+        </div>
+        <div class="card" id="sumcard" style="display:none">
+          <span class="lbl">Podsumowanie</span>
+          <div id="sumrows"></div>
+          <div class="stot"><span>RAZEM BRUTTO</span><span id="sgross"></span></div>
+        </div>
+        <div class="card">
+          <span class="lbl">Forma płatności</span>
+          <div style="display:flex;gap:6px">
+            <button class="pbtn" data-pay="cash" onclick="setPay(this)"><span class="pi">💵</span><span class="pl">Gotówka</span></button>
+            <button class="pbtn" data-pay="card" onclick="setPay(this)"><span class="pi">💳</span><span class="pl">Karta</span></button>
+            <button class="pbtn" data-pay="blik" onclick="setPay(this)"><span class="pi">📱</span><span class="pl">BLIK</span></button>
+            <button class="pbtn" data-pay="revolut" onclick="setPay(this)"><span class="pi">🔄</span><span class="pl">Revolut</span></button>
+            <button class="pbtn" data-pay="transfer" onclick="setPay(this)"><span class="pi">🏦</span><span class="pl">Przelew</span></button>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span class="lbl" style="margin:0">Zdjęcia</span>
+            <button style="background:none;border:none;color:var(--cy);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit" onclick="document.getElementById('finput').click()">📷 ZRÓB ZDJĘCIE</button>
+          </div>
+          <input type="file" id="finput" accept="image/*" multiple capture="environment" style="display:none" onchange="addPhotos(this)">
+          <div id="fempty" style="height:50px;background:rgba(255,255,255,.03);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:11px">Brak zdjęć</div>
+          <div id="fgrid" style="display:none;grid-template-columns:repeat(3,1fr);gap:6px"></div>
+        </div>
+        <div class="card" style="margin-bottom:8px">
+          <div class="sigs">
+            <div class="sigw">
+              <div class="sigbox" id="st" onclick="openSig('tech')"><div class="sighint">✍️<br>Technik</div></div>
+              <div class="siglr"><span class="sigl">Technik</span><button class="sigclr" id="stc" style="display:none" onclick="clearSig('tech')">Wyczyść</button></div>
+            </div>
+            <div class="sigw">
+              <div class="sigbox" id="sc" onclick="openSig('client')"><div class="sighint">✍️<br>Klient</div></div>
+              <div class="siglr"><span class="sigl">Klient</span><button class="sigclr" id="scc" style="display:none" onclick="clearSig('client')">Wyczyść</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="serr" id="serr"></div>
+        <button class="btn" id="savebtn" onclick="save()">⬇ ZAPISZ I WYŚLIJ PROTOKÓŁ</button>
+        <div style="height:20px"></div>
+      </div>
+    </div>
+
+    <!-- KLIENCI -->
+    <div class="pg" id="pg-klienci">
+      <div class="pad">
+        <div class="dadd" onclick="openCS(null)">+ DODAJ NOWEGO KLIENTA</div>
+        <div class="sbox"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="#8E8E93" stroke-width="2"/><path d="M20 20l-3-3" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/></svg><input placeholder="Szukaj..." oninput="renderC(this.value)"></div>
+        <div id="clist"><div class="empty">Baza klientów jest pusta</div></div>
+      </div>
+    </div>
+
+    <!-- ARCHIWUM -->
+    <div class="pg" id="pg-archiwum">
+      <div class="pad">
+        <div class="card"><div style="font-weight:900;font-size:16px;margin-bottom:2px">HISTORIA NAPRAW</div><div style="font-size:11px;color:var(--tx3)">Wszystkie protokoły chronologicznie</div></div>
+        <div class="sbox"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="#8E8E93" stroke-width="2"/><path d="M20 20l-3-3" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/></svg><input placeholder="Szukaj..." oninput="renderA(this.value)"></div>
+        <div id="alist"><div class="empty">Archiwum jest puste</div></div>
+      </div>
+    </div>
+
+    <!-- FIRMA -->
+    <div class="pg" id="pg-firma">
+      <div class="pad">
+        <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:16px">
+          <div class="lup" id="logobtn" onclick="document.getElementById('linput').click()"><span style="font-size:28px">📷</span></div>
+          <input type="file" id="linput" accept="image/*" style="display:none" onchange="doLogo(this)">
+          <span style="font-size:10px;font-weight:700;color:var(--cy);text-transform:uppercase;letter-spacing:.07em">Wgraj logo</span>
+        </div>
+        <div class="card">
+          <div class="frow"><label>Twoja firma</label><input id="f-name" placeholder="Nazwa firmy s.c." oninput="saveFirma()"></div>
+          <div class="frow"><label>NIP</label><input id="f-nip" placeholder="000-000-00-00" oninput="saveFirma()"></div>
+          <div class="frow"><label>Telefon</label><input id="f-phone" placeholder="+48 000 000 000" type="tel" oninput="saveFirma()"></div>
+          <div class="frow"><label>E-mail</label><input id="f-email" placeholder="biuro@firma.pl" type="email" oninput="saveFirma()"></div>
+          <div class="frow"><label>Adres</label><input id="f-address" placeholder="00-000 Miasto Ulica 1A" oninput="saveFirma()"></div>
+          <div class="frow"><label>Serwisant</label><input id="f-tech" placeholder="Imię Nazwisko" oninput="saveFirma()"></div>
+          <div class="frow"><label>Revolut</label><input id="f-revolut" placeholder="@twojnick" oninput="saveFirma()"></div>
+        </div>
+        <div style="text-align:center;padding:12px 0;font-size:11px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Dane zapisują się automatycznie</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="nav">
+    <button class="tab on" id="tab-protokol" onclick="goTab('protokol',this)">
+      <svg fill="none" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      PROTOKÓŁ
+    </button>
+    <button class="tab" id="tab-klienci" onclick="goTab('klienci',this)">
+      <svg fill="none" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M2 20c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="8" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M22 20c0-2.761-2.239-5-5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      KLIENCI
+    </button>
+    <button class="tab" id="tab-archiwum" onclick="goTab('archiwum',this)">
+      <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      ARCHIWUM
+    </button>
+    <button class="tab" id="tab-firma" onclick="goTab('firma',this)">
+      <svg fill="none" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="14" y="13" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.6"/><path d="M16 13v-1a2 2 0 014 0v1" stroke="currentColor" stroke-width="1.6"/></svg>
+      FIRMA
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- KLIENT MODAL -->
+<div class="modal" id="csmodal">
+  <div class="msheet">
+    <div class="mhdr"><span id="cstitle">Nowy klient</span><button onclick="closeCS()">✕</button></div>
+    <div class="mbody">
+      <div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">NIP</div><input class="sinp" id="cs-nip" placeholder="000-000-00-00"></div>
+      <div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Nazwa firmy / Klienta *</div><input class="sinp" id="cs-name" placeholder="ABC Sp. z o.o."></div>
+      <div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Telefon</div><input class="sinp" id="cs-phone" placeholder="500 000 000" type="tel"></div>
+      <div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">E-mail</div><input class="sinp" id="cs-email" placeholder="kontakt@firma.pl" type="email"></div>
+      <div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Adres</div><input class="sinp" id="cs-address" placeholder="ul. Główna 1, 00-001 Miasto"></div>
+      <div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">Osoba kontaktowa</div><input class="sinp" id="cs-contact" placeholder="Jan Kowalski"></div>
+      <button class="btn" onclick="saveC()">💾 Zapisz klienta</button>
+      <button class="btn red" id="csdel" style="display:none" onclick="delC()">🗑 Usuń klienta</button>
+    </div>
+  </div>
+</div>
+
+<!-- PICKER MODAL -->
+<div class="modal" id="cpicker">
+  <div class="msheet">
+    <div class="mhdr"><span>Wybierz klienta</span><button onclick="closePicker()">✕</button></div>
+    <div class="mbody" id="picklist"></div>
+  </div>
+</div>
+
+<!-- ARCHIWUM MODAL -->
+<div class="modal" id="amodal">
+  <div class="msheet">
+    <div class="mhdr"><span id="amtitle">Protokół</span><button onclick="closeAM()">✕</button></div>
+    <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+      <button class="btn" onclick="amShare()">⬆ Wyślij (Mail / AirDrop)</button>
+      <button class="btn" style="background:rgba(124,58,237,.8);color:#fff" onclick="amSave()">⬇ Pobierz PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIG MODAL -->
+<div id="sig-modal">
+  <div id="sig-sheet">
+    <div class="shandle"></div>
+    <div class="shdr">
+      <button class="sbtn" onclick="sigClear()">🗑 Wyczyść</button>
+      <span style="font-weight:800;font-size:14px;color:var(--cy)" id="siglbl">Podpis</span>
+      <button class="sbtn" onclick="sigClose()">Anuluj</button>
+    </div>
+    <div style="text-align:center;padding:6px 0;font-size:12px;color:var(--tx3);flex-shrink:0">Podpisz się tutaj palcem</div>
+    <div class="scw"><canvas id="sigcv"></canvas></div>
+    <div style="padding:12px 14px 24px;flex-shrink:0">
+      <button class="btn" style="margin:0" onclick="sigConfirm()">✓ Zatwierdź podpis</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const S={id:'',date:'',type:'Naprawa',wPaid:true,tPaid:true,pay:'',parts:[],photos:[],tSig:'',cSig:'',clients:[],archive:[],firma:{},editCid:null,sigTarget:null,sigLines:false,curArchId:null};
+
+function uid(){return String(Math.floor(100000+Math.random()*900000));}
+function today(){return new Date().toLocaleDateString('pl-PL');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg,ms=3500){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',ms);}
+function gv(id){return(document.getElementById(id)||{}).value||'';}
+
+// Init
+S.id=uid();S.date=today();
+document.getElementById('pid').textContent='ID: '+S.id;
+document.getElementById('pdate').textContent=S.date;
+
+// Load firma
+(function(){
+  try{const f=JSON.parse(localStorage.getItem('hpFirma')||'{}');S.firma=f;
+    ['name','nip','phone','email','address','tech','revolut'].forEach(k=>{const el=document.getElementById('f-'+k);if(el&&f[k])el.value=f[k];});
+  }catch(e){}
+  try{S.clients=JSON.parse(localStorage.getItem('hpClients')||'[]');}catch(e){}
+})();
+
+// NAV
+function goTab(name,btn){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('pg-'+name).classList.add('on');
+  btn.classList.add('on');
+  if(name==='archiwum')renderA('');
+  if(name==='klienci')renderC('');
+}
+
+// PROTOCOL
+function newProto(){
+  S.id=uid();S.date=today();S.type='Naprawa';S.wPaid=true;S.tPaid=true;S.pay='';S.parts=[];S.photos=[];S.tSig='';S.cSig='';
+  ['p-name','p-nip','p-phone','p-email','p-address','p-model','p-serial','p-wt','p-wr','p-tr','p-trr','p-fault','p-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('pid').textContent='ID: '+S.id;
+  document.getElementById('pdate').textContent=S.date;
+  document.querySelectorAll('.tbtn').forEach((b,i)=>b.classList.toggle('on',i===0));
+  document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('wpill').textContent='PŁATNE';
+  document.getElementById('tpill').textContent='PŁATNE';
+  document.getElementById('wrate').style.display='flex';
+  document.getElementById('trate').style.display='flex';
+  document.getElementById('serr').style.display='none';
+  renderParts();calcSum();renderSigs();resetPhotos();
+  goTab('protokol',document.getElementById('tab-protokol'));
+  document.getElementById('pg-protokol').scrollTop=0;
+}
+function setTyp(btn,t){document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.type=t;}
+function tog(w){
+  if(w==='work'){S.wPaid=!S.wPaid;document.getElementById('wpill').textContent=S.wPaid?'PŁATNE':'BEZPŁATNE';document.getElementById('wrate').style.display=S.wPaid?'flex':'none';}
+  else{S.tPaid=!S.tPaid;document.getElementById('tpill').textContent=S.tPaid?'PŁATNE':'BEZPŁATNE';document.getElementById('trate').style.display=S.tPaid?'flex':'none';}
+  calcSum();
+}
+function setPay(btn){const p=btn.dataset.pay;if(S.pay===p){S.pay='';btn.classList.remove('on');return;}document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.pay=p;}
+
+// PARTS
+function addPart(){S.parts.push({id:Date.now(),name:'',qty:1,paid:true,price:''});renderParts();}
+function delPart(id){S.parts=S.parts.filter(p=>p.id!==id);renderParts();calcSum();}
+function updPart(id,k,v){const p=S.parts.find(x=>x.id===id);if(p)p[k]=v;}
+function togPart(id){const p=S.parts.find(x=>x.id===id);if(p){p.paid=!p.paid;renderParts();calcSum();}}
+function renderParts(){
+  const el=document.getElementById('plist');
+  if(!S.parts.length){el.innerHTML='<div style="color:var(--tx3);font-size:12px;text-align:center;padding:8px 0">Brak części</div>';return;}
+  el.innerHTML=S.parts.map(p=>`<div class="prow"><div class="ptop"><input class="pname" placeholder="NAZWA CZĘŚCI" value="${esc(p.name)}" oninput="updPart(${p.id},'name',this.value)"><input class="pqty" type="number" min="1" value="${p.qty}" oninput="updPart(${p.id},'qty',this.value);calcSum()"><button class="pill" onclick="togPart(${p.id})">${p.paid?'PŁATNE':'BEZPŁ.'}</button><button class="pdel" onclick="delPart(${p.id})">🗑</button></div>${p.paid?`<div class="rrow"><span style="font-size:11px;color:var(--tx3);flex:1">Cena netto / szt.</span><input class="pinp" type="number" min="0" placeholder="0.00" value="${esc(p.price)}" oninput="updPart(${p.id},'price',this.value);calcSum()"><span style="font-size:11px;color:var(--tx3)">zł</span></div>`:''}</div>`).join('');
+}
+
+// SUMMARY
+function calcSum(){
+  const VAT=0.23,wt=parseFloat(gv('p-wt')||0),wr=parseFloat(gv('p-wr')||0),tr=parseFloat(gv('p-tr')||0),trr=parseFloat(gv('p-trr')||0);
+  const wn=S.wPaid?wt*wr:0,tn=S.tPaid?tr*trr:0;
+  const pn=S.parts.filter(p=>p.paid).reduce((s,p)=>s+parseFloat(p.price||0)*parseFloat(p.qty||1),0);
+  const net=wn+tn+pn;
+  if(!net){document.getElementById('sumcard').style.display='none';return;}
+  document.getElementById('sumcard').style.display='block';
+  const vat=net*VAT,gross=net+vat;
+  let rows='';
+  if(wn>0)rows+=`<div class="srow"><span>Czas pracy (${wt}h × ${wr}zł)</span><span>${wn.toFixed(2)} zł</span></div>`;
+  if(tn>0)rows+=`<div class="srow"><span>Dojazd (${tr}km × ${trr}zł)</span><span>${tn.toFixed(2)} zł</span></div>`;
+  S.parts.filter(p=>p.paid&&p.price>0).forEach(p=>rows+=`<div class="srow"><span>${esc(p.name)||'Część'} (${p.qty}szt.)</span><span>${(parseFloat(p.price)*parseFloat(p.qty)).toFixed(2)} zł</span></div>`);
+  rows+=`<div class="srow"><span style="color:var(--tx3)">Netto</span><span>${net.toFixed(2)} zł</span></div>`;
+  rows+=`<div class="srow"><span style="color:var(--tx3)">VAT 23%</span><span>${vat.toFixed(2)} zł</span></div>`;
+  document.getElementById('sumrows').innerHTML=rows;
+  document.getElementById('sgross').textContent=gross.toFixed(2)+' zł';
+}
+
+// PHOTOS
+function addPhotos(inp){Array.from(inp.files).forEach(f=>{const r=new FileReader();r.onload=e=>{S.photos.push(e.target.result);renderPhotos();};r.readAsDataURL(f);});inp.value='';}
+function renderPhotos(){
+  const em=document.getElementById('fempty'),gr=document.getElementById('fgrid');
+  if(!S.photos.length){em.style.display='flex';gr.style.display='none';return;}
+  em.style.display='none';gr.style.display='grid';
+  gr.innerHTML=S.photos.map((ph,i)=>`<div style="position:relative"><img src="${ph}" style="width:100%;height:80px;object-fit:cover;border-radius:8px"><button onclick="rmPhoto(${i})" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px">✕</button></div>`).join('');
+}
+function rmPhoto(i){S.photos.splice(i,1);renderPhotos();}
+function resetPhotos(){S.photos=[];renderPhotos();}
+
+// SIGNATURES
+let sCtx=null,sDraw=false;
+function openSig(target){
+  S.sigTarget=target;S.sigLines=false;
+  document.getElementById('siglbl').textContent=target==='tech'?'Podpis technika':'Podpis klienta';
+  document.getElementById('sig-modal').classList.add('on');
+  const cv=document.getElementById('sigcv');
+  const rect=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  cv.width=rect.width*dpr;cv.height=rect.height*dpr;
+  sCtx=cv.getContext('2d');sCtx.scale(dpr,dpr);
+  sCtx.fillStyle='#ffffff';sCtx.fillRect(0,0,rect.width,rect.height);
+  sCtx.clearRect(0,0,rect.width,rect.height);
+  cv.addEventListener('touchstart',sStart,{passive:false});
+  cv.addEventListener('touchmove',sMove,{passive:false});
+  cv.addEventListener('touchend',sEnd,{passive:false});
+}
+function sXY(e){const cv=document.getElementById('sigcv'),r=cv.getBoundingClientRect(),s=e.touches?e.touches[0]:e;return{x:s.clientX-r.left,y:s.clientY-r.top};}
+function sStart(e){e.preventDefault();sDraw=true;const p=sXY(e);sCtx.beginPath();sCtx.moveTo(p.x,p.y);}
+function sMove(e){e.preventDefault();if(!sDraw)return;const p=sXY(e);sCtx.lineWidth=2.5;sCtx.lineCap='round';sCtx.lineJoin='round';sCtx.strokeStyle='#000000';sCtx.lineTo(p.x,p.y);sCtx.stroke();S.sigLines=true;}
+function sEnd(e){e.preventDefault();sDraw=false;}
+function sigClear(){const cv=document.getElementById('sigcv');sCtx&&sCtx.clearRect(0,0,cv.offsetWidth,cv.offsetHeight);S.sigLines=false;}
+function sigClose(){
+  document.getElementById('sig-modal').classList.remove('on');
+  const cv=document.getElementById('sigcv');
+  cv.removeEventListener('touchstart',sStart);cv.removeEventListener('touchmove',sMove);cv.removeEventListener('touchend',sEnd);
+}
+function sigConfirm(){
+  if(S.sigLines){const data=document.getElementById('sigcv').toDataURL('image/png');if(S.sigTarget==='tech')S.tSig=data;else S.cSig=data;renderSigs();}
+  sigClose();
+}
+function clearSig(t){if(t==='tech')S.tSig='';else S.cSig='';renderSigs();}
+function renderSigs(){
+  ['tech','client'].forEach(t=>{
+    const sig=t==='tech'?S.tSig:S.cSig,box=document.getElementById(t==='tech'?'st':'sc'),clr=document.getElementById(t==='tech'?'stc':'scc');
+    if(sig){box.innerHTML=`<img src="${sig}" style="width:100%;height:100%;object-fit:contain;padding:4px">`;box.classList.add('ok');clr.style.display='block';}
+    else{box.innerHTML=`<div class="sighint">✍️<br>${t==='tech'?'Technik':'Klient'}</div>`;box.classList.remove('ok');clr.style.display='none';}
+  });
+}
+
+// PDF
+// PDF - zamiana polskich znaków
+function pl(s){return String(s||'').replace(/ą/g,'a').replace(/ć/g,'c').replace(/ę/g,'e').replace(/ł/g,'l').replace(/ń/g,'n').replace(/ó/g,'o').replace(/ś/g,'s').replace(/ź/g,'z').replace(/ż/g,'z').replace(/Ą/g,'A').replace(/Ć/g,'C').replace(/Ę/g,'E').replace(/Ł/g,'L').replace(/Ń/g,'N').replace(/Ó/g,'O').replace(/Ś/g,'S').replace(/Ź/g,'Z').replace(/Ż/g,'Z');}
+
+function makePDF(proto){
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,M=18,CW=W-M*2,VAT=0.23;
+  const wn=proto.wPaid?proto.wt*proto.wr:0,tn=proto.tPaid?proto.tr*proto.trr:0;
+  const pn=proto.parts.filter(p=>p.paid).reduce((s,p)=>s+parseFloat(p.price||0)*parseFloat(p.qty||1),0);
+  const net=wn+tn+pn,vat=net*VAT,gross=net+vat;
+  const PL={cash:'Gotówka',card:'Karta',blik:'BLIK',revolut:'Revolut',transfer:'Przelew'};
+  let y=M;
+  const chk=(n=10)=>{if(y+n>277){doc.addPage();y=M;}};
+  const hl=(yy)=>{doc.setLineWidth(.3);doc.setDrawColor(220,220,220);doc.line(M,yy,W-M,yy);};
+  const sec=(txt)=>{chk(12);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(0,180,200);doc.text(pl(txt).toUpperCase(),M,y);doc.setDrawColor(0,180,200);doc.setLineWidth(.5);doc.line(M,y+1,W-M,y+1);y+=7;};
+  // Header
+  doc.setFontSize(18);doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);doc.text('hampol',M,y);
+  const hw=doc.getTextWidth('hampol');doc.setTextColor(0,180,200);doc.text('Pro',M+hw,y);
+  doc.setFillColor(0,180,200,0.1);doc.roundedRect(W-M-30,y-6,30,9,2,2,'F');
+  doc.setFontSize(8);doc.setTextColor(0,120,140);doc.text(proto.type,W-M-15,y-1,{align:'center'});
+  y+=4;doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(120,120,120);
+  doc.text(pl('Protokol serwisowy nr ')+proto.id,M,y);doc.text(proto.date,W-M,y,{align:'right'});
+  y+=4;hl(y);y+=7;
+  // Firma
+  if(proto.firma&&proto.firma.name){
+    sec('Dane serwisu');
+    doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);doc.text(pl(proto.firma.name||''),M,y);y+=5;
+    doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
+    if(proto.firma.nip)doc.text('NIP: '+proto.firma.nip,M,y);
+    if(proto.firma.phone)doc.text(proto.firma.phone,W-M,y,{align:'right'});
+    y+=4;if(proto.firma.address)doc.text(pl(proto.firma.address||''),M,y);
+    if(proto.firma.email)doc.text(proto.firma.email,W-M,y,{align:'right'});
+    y+=8;
+  }
+  // Kontrahent
+  sec('Dane kontrahenta');
+  doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);doc.text(pl(proto.name||'—'),M,y);y+=5;
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
+  doc.text('NIP: '+(proto.nip||'—'),M,y);doc.text('Tel: '+(proto.phone||'—'),W-M,y,{align:'right'});y+=4;
+  doc.text(pl(proto.address||''),M,y);doc.text(proto.email||'',W-M,y,{align:'right'});y+=8;
+  // Maszyna
+  sec('Maszyna / Urzadzenie');
+  doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);
+  doc.text('Model: '+pl(proto.model||'—'),M,y);doc.text('S/N: '+(proto.serial||'—'),W-M,y,{align:'right'});y+=8;
+  // Czynnosci
+  sec('Czynnosci i logistyka');
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(60,60,60);
+  doc.text(`Czas pracy: ${proto.wt||0}h x ${proto.wr||0}zl/h = ${wn.toFixed(2)}zl (${proto.wPaid?'platne':'bezplatne'})`,M,y);y+=5;
+  doc.text(`Dojazd: ${proto.tr||0}km x ${proto.trr||0}zl/km = ${tn.toFixed(2)}zl (${proto.tPaid?'platne':'bezplatne'})`,M,y);y+=8;
+  if(proto.fault){chk(14);sec('Usterka / Diagnoza');doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);const ls=doc.splitTextToSize(pl(proto.fault),CW);doc.text(ls,M,y);y+=ls.length*5+6;}
+  if(proto.notes){chk(14);sec('Wykonane czynnosci');doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);const ls=doc.splitTextToSize(pl(proto.notes),CW);doc.text(ls,M,y);y+=ls.length*5+6;}
+  if(proto.parts.length){chk(20);sec('Uzyte czesci');
+    proto.parts.forEach((p,i)=>{chk(7);doc.setFontSize(8);doc.setFont('helvetica',p.paid?'normal':'italic');doc.setTextColor(60,60,60);const v=p.paid?(parseFloat(p.price||0)*parseFloat(p.qty||1)).toFixed(2)+' zl':'bezplatne';doc.text(`${pl(p.name||'Czesc')} x ${p.qty} szt. - ${v}`,M,y);y+=5;});y+=4;}
+  if(net>0){chk(30);sec('Podsumowanie kosztow');
+    doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(60,60,60);
+    doc.text('Wartosc netto: '+net.toFixed(2)+' zl',M,y);y+=5;
+    doc.text('VAT 23%: '+vat.toFixed(2)+' zl',M,y);y+=5;
+    doc.setFontSize(12);doc.setFont('helvetica','bold');doc.setTextColor(0,180,200);
+    doc.text('RAZEM BRUTTO: '+gross.toFixed(2)+' zl',M,y);y+=4;
+    if(proto.pay){doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);y+=4;doc.text('Forma platnosci: '+(PL[proto.pay]||proto.pay),M,y);}
+    y+=8;}
+  if(proto.photos&&proto.photos.length){chk(50);sec('Dokumentacja fotograficzna');
+    const pw=55,ph=42,gap=4;let px=M,py2=y;
+    for(const src of proto.photos){if(px+pw>W-M){px=M;py2+=ph+gap;chk(ph+8);}try{doc.addImage(src,'JPEG',px,py2,pw,ph,undefined,'FAST');}catch(e){}px+=pw+gap;}
+    y=py2+ph+8;}
+  // Podpisy
+  chk(50);sec('Podpisy');
+  const sh=35,sw=CW/2-6;
+  doc.setDrawColor(200,200,200);doc.setLineWidth(.4);
+  doc.roundedRect(M,y,sw,sh,2,2,'S');
+  if(proto.tSig){try{doc.addImage(proto.tSig,'PNG',M+2,y+2,sw-4,sh-10,undefined,'FAST');}catch(e){}}
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100,100,100);
+  doc.text('Podpis technika',M+sw/2,y+sh-2,{align:'center'});
+  const cx=M+sw+12;
+  doc.roundedRect(cx,y,sw,sh,2,2,'S');
+  if(proto.cSig){try{doc.addImage(proto.cSig,'PNG',cx+2,y+2,sw-4,sh-10,undefined,'FAST');}catch(e){}}
+  doc.text('Podpis klienta',cx+sw/2,y+sh-2,{align:'center'});
+  y+=sh+8;
+  // Footer
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(180,180,180);hl(287);doc.text('HampolPro · Protokol '+proto.id+' · '+new Date().toLocaleString('pl-PL'),M,291);doc.text(i+'/'+pages,W-M,291,{align:'right'});}
+  return doc;
+}
+
+async function save(){
+  const btn=document.getElementById('savebtn');
+  btn.textContent='⏳ Generowanie...';btn.disabled=true;
+  document.getElementById('serr').style.display='none';
+  try{
+    if(!window.jspdf){
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=res;s.onerror=()=>rej(new Error('Brak internetu'));document.head.appendChild(s);});
+    }
+    const proto={id:S.id,date:S.date,type:S.type,name:gv('p-name'),nip:gv('p-nip'),phone:gv('p-phone'),email:gv('p-email'),address:gv('p-address'),model:gv('p-model'),serial:gv('p-serial'),wt:parseFloat(gv('p-wt')||0),wr:parseFloat(gv('p-wr')||0),wPaid:S.wPaid,tr:parseFloat(gv('p-tr')||0),trr:parseFloat(gv('p-trr')||0),tPaid:S.tPaid,fault:gv('p-fault'),notes:gv('p-notes'),parts:[...S.parts],photos:[...S.photos],tSig:S.tSig,cSig:S.cSig,pay:S.pay,firma:{...S.firma}};
+    const doc=makePDF(proto);
+    doc.save('Protokol_'+proto.id+'.pdf');
+    const dataUri=doc.output('datauristring');
+    S.archive.push({id:proto.id,type:proto.type,client:proto.name,model:proto.model,date:proto.date,dataUri});
+    toast('✅ Protokół '+proto.id+' zapisany! PDF pobrany → Pliki → Pobrane',5000);
+  }catch(e){
+    const err=document.getElementById('serr');err.textContent='Błąd: '+e.message;err.style.display='block';
+  }
+  btn.textContent='⬇ ZAPISZ I WYŚLIJ PROTOKÓŁ';btn.disabled=false;
+}
+
+// ARCHIVE
+function openAM(id){S.curArchId=id;const item=S.archive.find(x=>x.id===id);if(!item)return;document.getElementById('amtitle').textContent='Protokół '+id+' · '+(item.client||'');document.getElementById('amodal').classList.add('on');}
+function closeAM(){document.getElementById('amodal').classList.remove('on');}
+function amSave(){const item=S.archive.find(x=>x.id===S.curArchId);if(!item)return;const a=document.createElement('a');a.href=item.dataUri;a.download='Protokol_'+S.curArchId+'.pdf';a.style.display='none';document.body.appendChild(a);a.click();document.body.removeChild(a);toast('✅ PDF pobrany');closeAM();}
+async function amShare(){const item=S.archive.find(x=>x.id===S.curArchId);if(!item)return;try{const b64=item.dataUri.split(',')[1],bin=atob(b64),arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);const blob=new Blob([arr],{type:'application/pdf'});const file=new File([blob],'Protokol_'+S.curArchId+'.pdf',{type:'application/pdf'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:'Protokół '+S.curArchId,files:[file]});toast('✅ Wysłano!');closeAM();return;}amSave();}catch(e){if(e.name!=='AbortError')amSave();else closeAM();}}
+function renderA(q){const el=document.getElementById('alist');const f=[...S.archive].reverse().filter(a=>!q||(a.client||'').toLowerCase().includes(q.toLowerCase())||(a.model||'').toLowerCase().includes(q.toLowerCase())||(a.date||'').includes(q));if(!f.length){el.innerHTML='<div class="empty">Archiwum jest puste</div>';return;}el.innerHTML=f.map(a=>`<div class="ac" onclick="openAM('${a.id}')"><div class="ai-ic">📄</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.client||'Brak nazwy')}</div><div style="font-size:11px;color:var(--tx3);margin-top:2px">${esc(a.model||'—')} · ${a.date} · ${a.type}</div><div style="font-size:10px;color:var(--tx3)">Nr: ${a.id}</div></div><span class="chev">›</span></div>`).join('');}
+
+// CLIENTS
+function avc(n){const cs=['#2563EB','#7C3AED','#DB2777','#D97706','#059669'];return cs[n.charCodeAt(0)%cs.length];}
+function avi(n){return n.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();}
+function renderC(q){const el=document.getElementById('clist');const f=S.clients.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||(c.nip||'').includes(q)||(c.phone||'').includes(q));if(!f.length){el.innerHTML='<div class="empty">Baza klientów jest pusta</div>';return;}el.innerHTML=f.map(c=>`<div class="cc" onclick="openCS('${c.id}')"><div class="av" style="background:${avc(c.name)}22;color:${avc(c.name)}">${avi(c.name)}</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.name)}</div><div style="font-size:11px;color:var(--tx3);margin-top:2px">${esc(c.phone||c.nip||c.email||'—')}</div></div><span class="chev">›</span></div>`).join('');}
+function openCS(id){S.editCid=id;document.getElementById('cstitle').textContent=id?'Edytuj klienta':'Nowy klient';document.getElementById('csdel').style.display=id?'block':'none';const c=id?S.clients.find(x=>x.id===id):null;['name','nip','phone','email','address','contact'].forEach(k=>document.getElementById('cs-'+k).value=c?(c[k]||''):'');document.getElementById('csmodal').classList.add('on');}
+function closeCS(){document.getElementById('csmodal').classList.remove('on');}
+function saveC(){const name=document.getElementById('cs-name').value.trim();if(!name)return;const d={id:S.editCid||String(Date.now()),name,nip:gv('cs-nip'),phone:gv('cs-phone'),email:gv('cs-email'),address:gv('cs-address'),contact:gv('cs-contact')};if(S.editCid){const i=S.clients.findIndex(x=>x.id===S.editCid);if(i>=0)S.clients[i]=d;}else S.clients.push(d);try{localStorage.setItem('hpClients',JSON.stringify(S.clients));}catch(e){}closeCS();renderC('');}
+function delC(){S.clients=S.clients.filter(x=>x.id!==S.editCid);try{localStorage.setItem('hpClients',JSON.stringify(S.clients));}catch(e){}closeCS();renderC('');}
+function openPicker(){const el=document.getElementById('picklist');if(!S.clients.length){el.innerHTML='<div style="text-align:center;padding:24px 0;color:var(--tx3);font-size:12px">Brak klientów w bazie.<br>Dodaj w zakładce Klienci.</div>';}else el.innerHTML=S.clients.map(c=>`<div class="cc" onclick="pickC('${c.id}')"><div class="av" style="background:${avc(c.name)}22;color:${avc(c.name)}">${avi(c.name)}</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px">${esc(c.name)}</div><div style="font-size:11px;color:var(--tx3)">${esc(c.nip||c.phone||'—')}</div></div><span class="chev">›</span></div>`).join('');document.getElementById('cpicker').classList.add('on');}
+function closePicker(){document.getElementById('cpicker').classList.remove('on');}
+function pickC(id){const c=S.clients.find(x=>x.id===id);if(!c)return;document.getElementById('p-name').value=c.name||'';document.getElementById('p-nip').value=c.nip||'';document.getElementById('p-phone').value=c.phone||'';document.getElementById('p-email').value=c.email||'';document.getElementById('p-address').value=c.address||'';closePicker();}
+
+// FIRMA
+function saveFirma(){S.firma={name:gv('f-name'),nip:gv('f-nip'),phone:gv('f-phone'),email:gv('f-email'),address:gv('f-address'),tech:gv('f-tech'),revolut:gv('f-revolut')};try{localStorage.setItem('hpFirma',JSON.stringify(S.firma));}catch(e){}}
+function doLogo(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{const btn=document.getElementById('logobtn');btn.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:contain">`;S.firma.logo=e.target.result;};r.readAsDataURL(f);}
+
+// Service Worker
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}
+</script>
+</body>
+</html>
