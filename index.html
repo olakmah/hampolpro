@@ -1,1 +1,1371 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HampolPro">
+<meta name="theme-color" content="#0A0E1A">
+<meta name="description" content="HampolPro — Service Management App">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>HampolPro</title>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js')
+      .then(()=>console.log('SW registered'))
+      .catch(e=>console.log('SW error',e));
+  });
+}
+</script>
+<style>
+:root{
+  --cy:#00D4E8;--mg:#E8006A;--cyd:#00A8BA;--mgd:#B8004E;
+  --bg:#0A0E1A;--bg2:#0F1525;--wh:#ffffff;
+  --card:rgba(255,255,255,.06);--card2:rgba(255,255,255,.10);
+  --br:rgba(255,255,255,.10);--br2:rgba(255,255,255,.18);
+  --tx:#F0F4FF;--tx2:rgba(240,244,255,.6);--tx3:rgba(240,244,255,.35);
+  --gn:#00E57A;--rd:#FF4460;
+}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--tx);font-size:15px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(0,212,232,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 90%,rgba(232,0,106,.10) 0%,transparent 60%);pointer-events:none;z-index:0}
+#app{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1}
+#hdr{position:fixed;top:0;left:0;right:0;height:56px;background:#0A0E1A;border-bottom:1px solid rgba(255,255,255,.08);padding:0 20px;display:flex;align-items:center;justify-content:space-between;z-index:100}
+#pages{position:fixed;top:56px;left:0;right:0;bottom:70px;overflow:hidden;background:var(--bg)}
+nav{position:fixed;bottom:0;left:0;right:0;height:70px;background:#0A0E1A;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;z-index:100}
+.pg{position:absolute;top:0;left:0;right:0;bottom:0;display:none;flex-direction:column;overflow:hidden}.pg.on{display:flex !important}
+.scr{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px;-webkit-overflow-scrolling:touch;height:100%}
 
+/* CARDS */
+.card{background:#131929;border:1px solid rgba(255,255,255,.10);border-radius:20px;padding:18px;margin-bottom:12px}
+.lbl{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase;margin-bottom:10px;display:block}
+.lbl.b{color:var(--cy)}
+
+/* INPUTS */
+.inp{width:100%;border:none;outline:none;background:transparent;font-family:inherit;font-size:15px;color:var(--tx);padding:4px 0;caret-color:var(--cy)}
+.inp::placeholder{color:var(--tx3)}
+textarea.inp{color:var(--tx)}
+/* Make input fields subtly visible */
+input.inp, textarea.inp{
+  background:#1A2235;
+  border-radius:8px;
+  padding:6px 8px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.flbl{font-size:11px;color:var(--tx3);margin-bottom:3px;font-weight:500;letter-spacing:.03em}
+
+/* BUTTONS */
+.btn{width:100%;padding:17px;border-radius:14px;background:linear-gradient(135deg,var(--cy),var(--cyd));color:#000;border:none;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.02em}
+.btn.purple{background:linear-gradient(135deg,var(--mg),var(--mgd));color:#fff;margin-top:0}
+.btn.red{background:rgba(255,68,96,.12);color:var(--rd);border:1px solid rgba(255,68,96,.25);font-weight:700;font-size:14px}
+.btn.ghost{background:#161E30;color:var(--tx);border:1px solid rgba(255,255,255,.09);font-weight:600;font-size:14px;margin-top:0}
+
+/* PILLS */
+.pill{background:rgba(0,229,122,.12);color:var(--gn);border:1px solid rgba(0,229,122,.25);border-radius:8px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+
+/* PAYMENT BUTTONS */
+.pbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 4px;border-radius:14px;border:1px solid rgba(255,255,255,.09);background:#131929;cursor:pointer;font-family:inherit;text-align:center;width:100%;transition:all .15s}
+.pbtn.on{border-color:var(--cy);background:rgba(0,212,232,.12)}
+.pbtn .pi{font-size:22px;line-height:1;display:block;text-align:center}
+.pbtn .pl{font-size:10px;font-weight:700;color:var(--tx3);display:block;text-align:center;letter-spacing:.03em}
+.pbtn.on .pl{color:var(--cy)}
+
+/* TYPE TABS */
+.trow{display:flex;gap:6px;margin-bottom:16px;background:#131929;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:5px}
+.tbtn{flex:1;padding:8px 4px;border-radius:10px;border:none;background:transparent;color:var(--tx3);font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s}
+.tbtn.on{background:linear-gradient(135deg,var(--cy),var(--cyd));color:#000;font-weight:700}
+
+/* LINKS & SMALL BTNS */
+.lnk{font-size:13px;color:var(--cy);font-weight:700;cursor:pointer;background:none;border:none;font-family:inherit}
+.gusbtn{background:linear-gradient(135deg,var(--cy),var(--cyd));border:none;border-radius:10px;padding:8px 14px;color:#000;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;flex-shrink:0}
+.gusbtn:disabled{background:rgba(255,255,255,.1);color:var(--tx3);cursor:not-allowed}
+.niprow{display:flex;gap:8px;align-items:center}
+.gmsg{font-size:12px;margin-top:5px;font-weight:600}.gmsg.ok{color:var(--gn)}.gmsg.err{color:var(--rd)}
+.idbadge{background:rgba(0,212,232,.12);color:var(--cy);border:1px solid rgba(0,212,232,.25);border-radius:8px;padding:5px 12px;font-size:13px;font-weight:700}
+
+/* WORK ROWS */
+.wrow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.wqty{width:52px;text-align:center;background:#1E2740;border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:6px 8px;font-size:13px;color:var(--tx);outline:none;font-family:inherit;caret-color:var(--cy)}
+.rrow{display:flex;align-items:center;gap:8px;background:#161E30;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:8px 12px;margin-top:4px}
+.pinp{width:80px;text-align:right;font-weight:700;border:none;outline:none;background:transparent;font-family:inherit;font-size:15px;color:var(--tx);caret-color:var(--cy)}
+
+/* PARTS */
+.prow{border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:12px;margin-bottom:12px}.prow:last-child{border-bottom:none;margin-bottom:0}
+.ptop{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.pname{flex:1;border:none;outline:none;background:transparent;font-family:inherit;font-size:14px;font-weight:600;color:var(--tx);caret-color:var(--cy)}.pname::placeholder{color:var(--tx3)}
+.pqty{width:44px;text-align:center;background:#1E2740;border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:6px;font-size:13px;font-weight:700;outline:none;font-family:inherit;color:var(--tx);caret-color:var(--cy)}
+.pdel{background:none;border:none;color:var(--rd);font-size:18px;cursor:pointer;padding:4px}
+
+/* SUMMARY */
+.srow{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,.07);color:var(--tx2)}
+.stot{display:flex;justify-content:space-between;padding:10px 0 0;margin-top:6px;font-size:17px;font-weight:900;color:var(--cy);border-top:1px solid rgba(0,212,232,.3)}
+
+/* SIGNATURES */
+.sigs{display:flex;gap:14px}
+.sigw{flex:1;display:flex;flex-direction:column;gap:6px}
+.sigbox{border:2px dashed rgba(255,255,255,.15);border-radius:14px;height:90px;background:#0F1525;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}
+.sigbox.ok{border-color:var(--cy);background:rgba(0,212,232,.08)}
+.sigbox img{width:100%;height:100%;object-fit:contain;padding:6px}
+.sighint{font-size:11px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:center}
+.siglr{display:flex;justify-content:space-between;align-items:center}
+.sigl{font-size:11px;color:var(--cy);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.sigclr{background:none;border:none;font-size:11px;color:var(--tx3);cursor:pointer;font-family:inherit}
+
+/* AI BUTTONS */
+.aibtn{border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;margin-left:auto;font-family:inherit;margin-top:8px}
+.ai1{background:linear-gradient(135deg,var(--mg),#9B00D4);color:#fff}
+.ai2{background:linear-gradient(135deg,var(--cy),#0090FF);color:#000}
+
+/* LISTS */
+.cc{background:#131929;border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:14px 18px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px}
+.ac{background:#131929;border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:14px 18px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px}
+.ai{width:44px;height:44px;background:rgba(0,212,232,.12);border:1px solid rgba(0,212,232,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
+.chev{color:var(--tx3);font-size:20px;flex-shrink:0}
+.dadd{border:2px dashed rgba(0,212,232,.3);border-radius:14px;padding:16px;text-align:center;color:var(--cy);font-weight:700;font-size:14px;cursor:pointer;background:rgba(0,212,232,.05);margin-bottom:12px}
+.sbox{background:#131929;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:11px 16px;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sbox input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;background:transparent;color:var(--tx)}.sbox input::placeholder{color:var(--tx3)}
+.empty{text-align:center;padding:50px 0;color:var(--tx3);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+
+/* FIRMA */
+.lup{width:100px;height:100px;background:#131929;border:1px solid rgba(255,255,255,.09);border-radius:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;margin-bottom:8px;overflow:hidden;border-style:solid}
+.frow{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.07)}.frow:last-child{border-bottom:none}
+.frow label{display:block;font-size:10px;color:var(--tx3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.frow input{width:100%;border:none;outline:none;background:transparent;font-family:inherit;font-size:15px;color:var(--tx)}.frow input.b{color:var(--cy)}
+
+/* SIG MODAL */
+#sig-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:none;flex-direction:column;justify-content:flex-end;touch-action:none}
+#sig-modal.on{display:flex}
+#sig-sheet{background:#0F1525;border:1px solid rgba(0,212,232,.25);border-radius:24px 24px 0 0;display:flex;flex-direction:column;height:72vh;touch-action:none;overflow:hidden}
+.shandle{width:36px;height:4px;background:rgba(255,255,255,.2);border-radius:99px;margin:12px auto 0;flex-shrink:0}
+.shdr{padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.sbtn{background:#1E2740;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:7px 16px;color:var(--tx2);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.scw{flex:1;position:relative;margin:8px 16px;border:2px solid rgba(0,212,232,.4);border-radius:16px;overflow:hidden;background:#ffffff}
+.sbl{position:absolute;bottom:30%;left:16px;right:16px;height:1px;background:rgba(0,0,0,.1);pointer-events:none}
+#sigcv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
+
+/* SHEETS / MODALS */
+.over{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;display:none;flex-direction:column;justify-content:flex-end}.over.on{display:flex}
+.sheet{background:#0F1525;border:1px solid rgba(255,255,255,.15);border-top-left-radius:24px;border-top-right-radius:24px;max-height:85vh;display:flex;flex-direction:column}
+.shd{padding:12px 18px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.sht{font-weight:800;font-size:17px;color:var(--tx)}
+.shc{background:#1E2740;border:none;border-radius:10px;width:30px;height:30px;cursor:pointer;font-size:16px;color:var(--tx2)}
+.sbody{overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch}
+.sinp{width:100%;padding:11px 14px;background:#1A2235;border:1px solid rgba(255,255,255,.09);border-radius:11px;font-family:inherit;font-size:14px;color:var(--tx);outline:none;caret-color:var(--cy)}.sinp:focus{border-color:var(--cy)}
+
+/* CLIENT PICKER */
+#cpicker{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:6000;display:none;flex-direction:column;justify-content:flex-end}
+#cpicker.on{display:flex}
+
+/* ARCHIVE MODAL */
+#amodal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:7000;display:none;flex-direction:column;justify-content:flex-end}
+#amodal.on{display:flex}
+#sendmodal.on{display:flex}
+
+/* SETTINGS BTNS */
+.sbtn2{padding:10px 8px;border-radius:11px;border:1px solid rgba(255,255,255,.09);background:#161E30;color:var(--tx2);font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;text-align:center;transition:all .15s}
+.sbtn2.on{border-color:var(--cy);background:rgba(0,212,232,.12);color:var(--cy)}
+
+/* SEND PANEL */
+#sendpanel{background:rgba(0,229,122,.07);border:1px solid rgba(0,229,122,.25);border-radius:18px;padding:18px;margin-top:10px;display:none}
+#qr-panel{background:#161E30;border:1px solid rgba(0,212,232,.2);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center}
+
+/* SERR */
+.serr{background:rgba(255,68,96,.1);color:var(--rd);border:1px solid rgba(255,68,96,.25);border-radius:12px;padding:10px 14px;margin-bottom:8px;font-size:13px;font-weight:600;display:none}
+
+/* TOAST */
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(15,21,37,.95);-webkit-border:1px solid var(--br2);color:var(--tx);padding:14px 20px;border-radius:14px;font-size:13px;font-weight:600;display:none;z-index:9000;max-width:88%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.6);line-height:1.5}
+
+/* WELCOME SCREEN BTNS */
+.wlbtn{padding:12px 8px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:#161E30;color:#fff;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center}
+.wlbtn.on{background:var(--cy);color:#000;border-color:var(--cy);font-weight:800}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hdr">
+    <div class="logo">
+      <span class="h1">h</span><span class="h2">ampol</span><span class="h3">P</span><span class="h4">ro</span>
+    </div>
+    <button class="nbtn" onclick="newProto()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/></svg>
+      NOWY
+    </button>
+  </div>
+
+  <div id="pages">
+    <!-- PROTOKÓŁ -->
+    <div class="pg on" id="pg-protokol">
+      <div class="scr" id="pscroll">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <span class="idbadge" id="pid"></span>
+          <span style="font-size:13px;color:var(--gr);font-weight:500" id="pdate"></span>
+        </div>
+        <div class="trow">
+          <button class="tbtn on" onclick="setTyp(this,'naprawa')">Naprawa</button>
+          <button class="tbtn" onclick="setTyp(this,'przeglad')">Przegląd</button>
+          <button class="tbtn" onclick="setTyp(this,'instalacja')">Instalacja</button>
+          <button class="tbtn" onclick="setTyp(this,'dostawa')">Dostawa</button>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span class="lbl" style="margin:0">Dane kontrahenta</span>
+            <button class="lnk" onclick="openPicker()" style="background:#E8EDFF;border-radius:8px;padding:5px 12px;font-size:12px;text-transform:uppercase;letter-spacing:.04em">👥 Wybierz z bazy</button>
+          </div>
+          <input class="inp" id="p-name" placeholder="Nazwa Firmy / Klienta" style="font-size:17px;font-weight:700;margin-bottom:8px">
+          <div style="padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.07)">
+            <div class="flbl">NIP</div>
+            <div class="niprow">
+              <input class="inp" id="p-nip" placeholder="000-000-00-00" style="flex:1">
+            <div class="gmsg" id="gusmsg"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr">
+            <div style="padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.07);padding-right:12px">
+              <div class="flbl">Telefon</div><input class="inp" id="p-phone" placeholder="+48 000 000 000" type="tel">
+            </div>
+            <div style="padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.07);padding-left:12px">
+              <div class="flbl">E-mail</div><input class="inp" id="p-email" placeholder="kontakt@firma.pl" type="email">
+            </div>
+            <div style="padding-top:10px;grid-column:1/-1">
+              <div class="flbl">Adres</div><input class="inp" id="p-address" placeholder="ul. Przykładowa 1, 00-001 Miasto">
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <span class="lbl b">Maszyna / Urządzenie</span>
+          <div style="display:flex;align-items:center;gap:10px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.07)">
+            <span style="font-size:20px">🖥️</span><input class="inp" id="p-model" placeholder="Model maszyny">
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">🏷️</span><input class="inp" id="p-serial" placeholder="NUMER SERYJNY (S/N)" style="text-transform:uppercase;font-size:13px">
+          </div>
+        </div>
+        <div class="card">
+          <span class="lbl">Czynności i logistyka</span>
+          <div style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,.07)">
+            <div class="wrow">
+              <span style="font-weight:700;font-size:14px;flex:1">Czas pracy</span>
+              <input class="wqty" id="p-wt" placeholder="h" type="number" min="0" oninput="calcSum()">
+              <button class="pill" id="wpill" onclick="tog('work')">PŁATNE</button>
+            </div>
+            <div class="rrow" id="wrate">
+              <span style="font-size:12px;color:var(--gr);font-weight:600;flex:1">Cena netto / h</span>
+              <input class="pinp" id="p-wr" placeholder="0.00" type="number" min="0" oninput="calcSum()">
+              <span style="font-size:13px;color:var(--gr);font-weight:600">zł</span>
+            </div>
+          </div>
+          <div>
+            <div class="wrow">
+              <span style="font-weight:700;font-size:14px;flex:1">Dojazd (km)</span>
+              <input class="wqty" id="p-tr" placeholder="km" type="number" min="0" oninput="calcSum()">
+              <button class="pill" id="tpill" onclick="tog('travel')">PŁATNE</button>
+            </div>
+            <div class="rrow" id="trate">
+              <span style="font-size:12px;color:var(--gr);font-weight:600;flex:1">Cena netto / km</span>
+              <input class="pinp" id="p-trr" placeholder="0.00" type="number" min="0" oninput="calcSum()">
+              <span style="font-size:13px;color:var(--gr);font-weight:600">zł</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <textarea class="inp" id="p-fault" placeholder="Opis usterki..." style="height:80px;resize:none;font-style:italic" oninput="this.style.fontStyle=this.value?'normal':'italic'"></textarea>
+        </div>
+        <div class="card">
+          <textarea class="inp" id="p-notes" placeholder="WPISZ LUŹNE NOTATKI CO ZOSTAŁO ZROBIONE..." style="height:100px;resize:none"></textarea>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span class="lbl" style="margin:0">Użyte części</span>
+            <button class="lnk" onclick="addPart()">+ DODAJ CZĘŚĆ</button>
+          </div>
+          <div id="plist"><div style="color:var(--lg);font-size:13px;text-align:center;padding:10px 0">Brak dodanych części</div></div>
+        </div>
+        <div class="card" id="sumcard" style="display:none">
+          <span class="lbl">Podsumowanie kosztów</span>
+          <div id="sumrows"></div>
+          <div style="margin-top:12px;padding:10px 0;border-top:2px solid var(--br)">
+            <div class="srow"><span style="color:var(--gr)">Netto</span><span id="snet"></span></div>
+            <div class="srow"><span style="color:var(--gr)">VAT (23%)</span><span id="svat"></span></div>
+            <div class="stot"><span>RAZEM BRUTTO</span><span id="sgross"></span></div>
+          </div>
+        </div>
+        <div class="card">
+          <span class="lbl">Forma płatności</span>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+            <button class="pbtn" data-pay="cash" onclick="setPay(this)"><span class="pi">💵</span><span class="pl">Gotówka</span></button>
+            <button class="pbtn" data-pay="card" onclick="setPay(this)"><span class="pi">💳</span><span class="pl">Karta</span></button>
+            <button class="pbtn" data-pay="blik" onclick="setPay(this)"><span class="pi">📱</span><span class="pl">BLIK</span></button>
+            <button class="pbtn" data-pay="revolut" onclick="setPay(this)"><span class="pi">🔄</span><span class="pl">Revolut</span></button>
+            <button class="pbtn" data-pay="transfer" onclick="setPay(this)"><span class="pi">🏦</span><span class="pl">Przelew</span></button>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span class="lbl" style="margin:0">Dokumentacja foto</span>
+            <button class="lnk" onclick="document.getElementById('finput').click()">📷 ZRÓB ZDJĘCIE</button>
+          </div>
+          <input type="file" id="finput" accept="image/*" multiple capture="environment" style="display:none" onchange="addPhotos(this)">
+          <div id="fempty" style="height:60px;background:var(--bg);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--lg);font-size:13px">Brak zdjęć</div>
+          <div id="fgrid" style="display:none;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+        </div>
+        <div class="card" style="margin-bottom:8px">
+          <div class="sigs">
+            <div class="sigw">
+              <div class="sigbox" id="st" onclick="openSig('tech')"><div class="sighint">✍️<br>Dotknij aby podpisać</div></div>
+              <div class="siglr"><span class="sigl">Podpis technika</span><button class="sigclr" id="stc" style="display:none" onclick="clearSig('tech')">Wyczyść</button></div>
+            </div>
+            <div class="sigw">
+              <div class="sigbox" id="sc" onclick="openSig('client')"><div class="sighint">✍️<br>Dotknij aby podpisać</div></div>
+              <div class="siglr"><span class="sigl">Podpis klienta</span><button class="sigclr" id="scc" style="display:none" onclick="clearSig('client')">Wyczyść</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="serr" id="serr"></div>
+        <button class="btn" id="savebtn" onclick="save()">⬇ ZAPISZ I WYŚLIJ PROTOKÓŁ</button>
+
+        <!-- Panel wysyłania — pojawia się po zapisaniu -->
+        <div id="sendpanel" style="display:none;background:#F0FDF4;border:1px solid #86EFAC;border-radius:16px;padding:18px;margin-top:10px">
+          <div style="font-weight:800;font-size:16px;color:#166534;margin-bottom:4px">✅ PDF gotowy!</div>
+          <div style="font-size:13px;color:#166534;margin-bottom:14px" id="sendpanel-sub">Plik pobrany na urządzenie.</div>
+
+          <!-- QR Revolut panel -->
+          <div id="qr-panel" style="display:none;background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;text-align:center;border:1px solid #E8EDFF">
+            <div style="font-weight:800;font-size:14px;color:#2563EB;margin-bottom:8px">🔄 Płatność Revolut</div>
+            <img id="qr-img" src="" alt="QR Revolut" style="width:160px;height:160px;border-radius:10px;display:block;margin:0 auto 10px">
+            <div id="qr-amount" style="font-weight:700;font-size:15px;color:#1C1C1E;margin-bottom:6px"></div>
+            <div style="font-size:12px;color:#8E8E93;margin-bottom:6px">Klient skanuje kod → płaci w Revolut</div>
+            <a id="qr-link" href="" target="_blank" style="font-size:12px;color:#2563EB;font-weight:600;word-break:break-all"></a>
+          </div>
+
+          <button class="btn" style="margin:0;margin-bottom:8px" onclick="doSend()">⬆ Wyślij (Mail / AirDrop / WhatsApp)</button>
+          <button class="btn" style="margin:0;background:#fff;color:var(--tx);border:1px solid rgba(255,255,255,.09);font-weight:600;font-size:14px" onclick="document.getElementById('sendpanel').style.display='none'">Zamknij</button>
+        </div>
+
+        <div style="height:16px"></div>
+      </div>
+    </div>
+
+    <!-- KLIENCI -->
+    <div class="pg" id="pg-klienci">
+      <div class="scr">
+        <div class="dadd" onclick="openCS(null)">+ DODAJ NOWEGO KLIENTA</div>
+        <div class="sbox"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="#8E8E93" stroke-width="2"/><path d="M20 20l-3-3" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/></svg><input placeholder="Szukaj..." oninput="renderC(this.value)"></div>
+        <div id="clist"><div class="empty">Baza klientów jest pusta</div></div>
+      </div>
+    </div>
+
+    <!-- ARCHIWUM -->
+    <div class="pg" id="pg-archiwum">
+      <div class="scr">
+        <div class="card"><div style="font-weight:900;font-size:18px;margin-bottom:4px;color:var(--tx)">HISTORIA NAPRAW</div><div style="font-size:11px;color:var(--gr);font-weight:600;text-transform:uppercase;letter-spacing:.07em">Wszystkie protokoły chronologicznie</div></div>
+        <div class="sbox"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="#8E8E93" stroke-width="2"/><path d="M20 20l-3-3" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/></svg><input placeholder="Szukaj..." oninput="renderA(this.value)"></div>
+        <div id="alist"><div class="empty">Archiwum jest puste</div></div>
+      </div>
+    </div>
+
+    <!-- FIRMA -->
+    <div class="pg" id="pg-firma">
+      <div class="scr">
+        <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:20px">
+          <button class="lup" id="logobtn" onclick="document.getElementById('linput').click()"><span style="font-size:32px;color:var(--lg)">📷</span></button>
+          <input type="file" id="linput" accept="image/*" style="display:none" onchange="doLogo(this)">
+          <span style="font-size:12px;font-weight:700;color:var(--bl);text-transform:uppercase;letter-spacing:.07em">Wgraj logo</span>
+        </div>
+        <div class="card">
+          <div class="frow"><label>Twoja firma</label><input id="f-name" placeholder="Nazwa firmy s.c." oninput="saveFirma()"></div>
+          <div class="frow"><label>NIP</label><input id="f-nip" placeholder="000-000-00-00" oninput="saveFirma()"></div>
+          <div class="frow"><label>Telefon</label><input id="f-phone" placeholder="+48 000 000 000" type="tel" class="b" oninput="saveFirma()"></div>
+          <div class="frow"><label>E-mail</label><input id="f-email" placeholder="biuro@firma.pl" type="email" oninput="saveFirma()"></div>
+          <div class="frow"><label>Adres</label><input id="f-address" placeholder="00-000 Miasto Ulica 1A" oninput="saveFirma()"></div>
+          <div class="frow"><label>Serwisant</label><input id="f-tech" placeholder="Imię Nazwisko" oninput="saveFirma()"></div>
+          <div class="frow"><label>🔄 Revolut (tag lub link)</label><input id="f-revolut" placeholder="@twojnick lub revolut.me/nick" oninput="saveFirma()"></div>
+        </div>
+
+        <!-- Language & Currency settings -->
+        <div class="card" style="margin-top:4px">
+          <span class="lbl" id="lbl-lang-settings">🌐 Język aplikacji</span>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+            <button class="sbtn2" data-lang="pl" onclick="changeLang(this)">🇵🇱 Polski</button>
+            <button class="sbtn2" data-lang="en" onclick="changeLang(this)">🇬🇧 English</button>
+            <button class="sbtn2" data-lang="de" onclick="changeLang(this)">🇩🇪 Deutsch</button>
+            <button class="sbtn2" data-lang="uk" onclick="changeLang(this)">🇺🇦 Українська</button>
+          </div>
+          <span class="lbl" id="lbl-cur-settings">💰 Waluta</span>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button class="sbtn2" data-cur="PLN" onclick="changeCur(this)">🇵🇱 PLN</button>
+            <button class="sbtn2" data-cur="EUR" onclick="changeCur(this)">🇪🇺 EUR</button>
+            <button class="sbtn2" data-cur="USD" onclick="changeCur(this)">🇺🇸 USD</button>
+            <button class="sbtn2" data-cur="GBP" onclick="changeCur(this)">🇬🇧 GBP</button>
+          </div>
+        </div>
+        <div style="text-align:center;padding:8px 0 16px;font-size:12px;color:var(--lg);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Dane zapisują się automatycznie</div>
+      </div>
+    </div>
+  </div>
+
+  <nav>
+    <button class="tab on" onclick="goTab('protokol',this)" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;border:none;background:none;cursor:pointer;color:var(--cy);font-size:10px;font-weight:600;font-family:inherit;letter-spacing:.04em">
+      <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      PROTOKÓŁ
+    </button>
+    <button class="tab" onclick="goTab('klienci',this)" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;border:none;background:none;cursor:pointer;color:rgba(240,244,255,.35);font-size:10px;font-weight:600;font-family:inherit;letter-spacing:.04em">
+      <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M2 20c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="8" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M22 20c0-2.761-2.239-5-5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      KLIENCI
+    </button>
+    <button class="tab" onclick="goTab('archiwum',this)" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;border:none;background:none;cursor:pointer;color:rgba(240,244,255,.35);font-size:10px;font-weight:600;font-family:inherit;letter-spacing:.04em">
+      <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      ARCHIWUM
+    </button>
+    <button class="tab" onclick="goTab('firma',this)" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;border:none;background:none;cursor:pointer;color:rgba(240,244,255,.35);font-size:10px;font-weight:600;font-family:inherit;letter-spacing:.04em">
+      <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="14" y="13" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.6"/><path d="M16 13v-1a2 2 0 014 0v1" stroke="currentColor" stroke-width="1.6"/></svg>
+      FIRMA
+    </button>
+  </nav>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- WYŚLIJ MODAL -->
+<div id="sendmodal" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:800;display:none;flex-direction:column;justify-content:flex-end">
+  <div style="background:#fff;border-radius:22px 22px 0 0;padding:0 0 32px">
+    <div style="width:36px;height:4px;background:var(--lg);border-radius:99px;margin:12px auto 0"></div>
+    <div style="padding:20px 20px 8px;text-align:center">
+      <div style="font-size:40px;margin-bottom:8px">✅</div>
+      <div style="font-weight:900;font-size:18px;margin-bottom:6px" id="sendtitle">PDF gotowy!</div>
+      <div style="font-size:13px;color:var(--gr);line-height:1.5">Plik PDF został pobrany na urządzenie.<br>Teraz możesz go wysłać.</div>
+    </div>
+    <div style="padding:0 16px;display:flex;flex-direction:column;gap:10px">
+      <button class="btn" style="margin:0" onclick="doSend()">⬆ Wyślij (Mail / AirDrop / WhatsApp)</button>
+      <button class="btn" style="margin:0;background:#fff;color:var(--tx);border:1px solid rgba(255,255,255,.09);font-weight:600;font-size:14px" onclick="closeSendModal()">Zamknij — wyślę później</button>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHIWUM MODAL -->
+<div id="amodal">
+  <div style="background:#0F1525;border:1px solid rgba(255,255,255,.12);border-radius:22px 22px 0 0;display:flex;flex-direction:column">
+    <div class="shandle"></div>
+    <div class="shd"><span class="sht" id="amtitle">Protokół</span><button class="shc" onclick="closeAM()">✕</button></div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+      <button class="btn" style="margin:0" onclick="amShare()">⬆ Mail / AirDrop / WhatsApp</button>
+      <button class="btn purple" style="margin:0" onclick="amSave()">⬇ PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- PODPISY MODAL -->
+<div id="sig-modal">
+  <div id="sig-sheet">
+    <div class="shandle"></div>
+    <div class="shdr">
+      <button class="sbtn" onclick="sigClear()">🗑 Wyczyść</button>
+      <span style="font-weight:800;font-size:15px;color:var(--bl);text-transform:uppercase" id="siglbl">Podpis</span>
+      <button class="sbtn" onclick="sigClose()">Anuluj</button>
+    </div>
+    <div style="text-align:center;padding:8px 0 4px;font-size:13px;color:var(--lg);font-weight:500;flex-shrink:0">✍️ Podpisz się tutaj palcem</div>
+    <div class="scw"><div class="sbl"></div><canvas id="sigcv"></canvas></div>
+    <div style="padding:12px 16px 28px;flex-shrink:0">
+      <button class="btn" style="margin:0" onclick="sigConfirm()">✓ Zatwierdź podpis</button>
+    </div>
+  </div>
+</div>
+
+<!-- WELCOME SCREEN -->
+<div id="welcome" style="position:fixed;inset:0;background:#0A0E1A;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;color:#fff;overflow:hidden">
+  <div style="position:absolute;top:-20%;left:-20%;width:60%;height:60%;background:radial-gradient(circle,rgba(0,212,232,.18) 0%,transparent 70%);pointer-events:none"></div>
+  <div style="position:absolute;bottom:-20%;right:-20%;width:60%;height:60%;background:radial-gradient(circle,rgba(232,0,106,.14) 0%,transparent 70%);pointer-events:none"></div>
+  <div style="display:flex;align-items:baseline;gap:1px;margin-bottom:6px">
+    <span style="font-size:36px;font-weight:700;letter-spacing:-.5px;color:#fff">h</span>
+    <span style="font-size:26px;font-weight:300;letter-spacing:.1em;color:rgba(255,255,255,.75)">ampol</span>
+    <span style="font-size:36px;font-weight:800;letter-spacing:-.5px;color:#93C5FD">P</span>
+    <span style="font-size:20px;font-weight:300;letter-spacing:.2em;color:rgba(147,197,253,.8)">ro</span>
+  </div>
+  <div style="font-size:11px;opacity:.5;margin-bottom:48px;letter-spacing:.18em;text-transform:uppercase;color:#fff;font-weight:400">Service Management</div>
+
+  <!-- Language -->
+  <div style="width:100%;max-width:340px;margin-bottom:28px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.7;margin-bottom:10px">🌐 Language / Język / Sprache / Мова</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="wlbtn on" data-lang="pl" onclick="selLang(this)">🇵🇱 Polski</button>
+      <button class="wlbtn" data-lang="en" onclick="selLang(this)">🇬🇧 English</button>
+      <button class="wlbtn" data-lang="de" onclick="selLang(this)">🇩🇪 Deutsch</button>
+      <button class="wlbtn" data-lang="uk" onclick="selLang(this)">🇺🇦 Українська</button>
+    </div>
+  </div>
+
+  <!-- Currency -->
+  <div style="width:100%;max-width:340px;margin-bottom:40px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.7;margin-bottom:10px" id="wlbl-currency">💰 Waluta</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="wlbtn on" data-cur="PLN" onclick="selCur(this)">🇵🇱 PLN — złoty</button>
+      <button class="wlbtn" data-cur="EUR" onclick="selCur(this)">🇪🇺 EUR — euro</button>
+      <button class="wlbtn" data-cur="USD" onclick="selCur(this)">🇺🇸 USD — dolar</button>
+      <button class="wlbtn" data-cur="GBP" onclick="selCur(this)">🇬🇧 GBP — funt</button>
+    </div>
+  </div>
+
+  <button id="wstart" onclick="startApp()" style="width:100%;max-width:340px;padding:18px;border-radius:16px;border:none;background:linear-gradient(135deg,#00D4E8,#00A8BA);color:#000;font-weight:900;font-size:16px;cursor:pointer;font-family:inherit;letter-spacing:.02em;position:relative;z-index:1">
+    ✓ Rozpocznij / Start
+  </button>
+</div>
+
+<!-- LANGUAGE / CURRENCY IN FIRMA (settings) -->
+<div id="cpicker">
+  <div class="sheet" style="max-height:75vh">
+    <div class="shandle"></div>
+    <div class="shd"><span class="sht">Wybierz klienta</span><button class="shc" onclick="closePicker()">✕</button></div>
+    <div class="sbody" id="picklist"></div>
+  </div>
+</div>
+
+<!-- KLIENT SHEET -->
+<div class="over" id="csover">
+  <div class="sheet">
+    <div class="shandle"></div>
+    <div class="shd"><span class="sht" id="cstitle">Nowy klient</span><button class="shc" onclick="closeCS()">✕</button></div>
+    <div class="sbody">
+      <div>
+        <div class="flbl">NIP</div>
+        <div class="niprow">
+          <input class="sinp" id="cs-nip" placeholder="000-000-00-00" style="flex:1">
+        </div>
+        <div class="gmsg" id="cgusmsg"></div>
+      </div>
+      <div><div class="flbl">Nazwa firmy / Klienta *</div><input class="sinp" id="cs-name" placeholder="ABC Sp. z o.o."></div>
+      <div><div class="flbl">Telefon</div><input class="sinp" id="cs-phone" placeholder="500 000 000" type="tel"></div>
+      <div><div class="flbl">E-mail</div><input class="sinp" id="cs-email" placeholder="kontakt@firma.pl" type="email"></div>
+      <div><div class="flbl">Adres</div><input class="sinp" id="cs-address" placeholder="ul. Główna 1, 00-001 Miasto"></div>
+      <div><div class="flbl">Osoba kontaktowa</div><input class="sinp" id="cs-contact" placeholder="Jan Kowalski"></div>
+      <button class="btn" onclick="saveC()">💾 Zapisz klienta</button>
+      <button class="btn red" id="csdel" style="display:none" onclick="delC()">🗑 Usuń klienta</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── TRANSLATIONS ────────────────────────────────────
+const TR={
+  pl:{
+    protocol:'Protokół',naprawa:'Naprawa',przeglad:'Przegląd',instalacja:'Instalacja',dostawa:'Dostawa',
+    contractor:'Dane kontrahenta',selectFromDB:'👥 Wybierz z bazy',companyName:'Nazwa Firmy / Klienta',
+    nip:'NIP / Nr VAT',phone:'Telefon',email:'E-mail',address:'Adres',
+    machine:'Maszyna / Urządzenie',model:'Model maszyny',serial:'NUMER SERYJNY (S/N)',
+    workTitle:'Czynności i logistyka',workTime:'Czas pracy',travel:'Dojazd (km)',
+    paid:'PŁATNE',unpaid:'BEZPŁATNE',rateH:'Cena netto / h',rateKm:'Cena netto / km',
+    fault:'Opis usterki...',notes:'WPISZ LUŹNE NOTATKI CO ZOSTAŁO ZROBIONE...',
+    parts:'Użyte części',addPart:'+ DODAJ CZĘŚĆ',noParts:'Brak dodanych części',partName:'NAZWA CZĘŚCI',
+    summary:'Podsumowanie kosztów',net:'Netto',vat:'VAT',gross:'RAZEM BRUTTO',
+    payment:'Forma płatności',cash:'Gotówka',card:'Karta',blik:'BLIK',revolut:'Revolut',transfer:'Przelew',
+    photo:'Dokumentacja foto',takePhoto:'📷 ZRÓB ZDJĘCIE',noPhotos:'Brak zdjęć',
+    sigTech:'Podpis technika',sigClient:'Podpis klienta',signHere:'Dotknij aby podpisać',clear:'Wyczyść',
+    saveBtn:'⬇ ZAPISZ I WYŚLIJ PROTOKÓŁ',saving:'⏳ Generowanie...',
+    pdfReady:'✅ PDF gotowy!',sendBtn:'⬆ Wyślij (Mail / AirDrop / WhatsApp)',close:'Zamknij',
+    clients:'Klienci',addClient:'+ DODAJ NOWEGO KLIENTA',noClients:'Baza klientów jest pusta',
+    archive:'Archiwum',histTitle:'HISTORIA NAPRAW',histSub:'Wszystkie protokoły chronologicznie',noArchive:'Archiwum jest puste',
+    firma:'Firma',yourFirma:'Twoja firma',technician:'Serwisant',uploadLogo:'Wgraj logo',autoSave:'Dane zapisują się automatycznie',
+    langSettings:'🌐 Język aplikacji',curSettings:'💰 Waluta',
+    tabProtokol:'PROTOKÓŁ',tabKlienci:'KLIENCI',tabArchiwum:'ARCHIWUM',tabFirma:'FIRMA',
+    newBtn:'NOWY',confirmSig:'✓ Zatwierdź podpis',clearSig:'🗑 Wyczyść',cancelSig:'Anuluj',
+    signLabel:'Podpisz się tutaj palcem',editClient:'Edytuj klienta',newClient:'Nowy klient',
+    saveClient:'💾 Zapisz klienta',deleteClient:'🗑 Usuń klienta',selectClient:'Wybierz klienta',
+    noClientsDB:'Brak klientów w bazie.\nDodaj klientów w zakładce Klienci.',
+    contact:'Osoba kontaktowa',downloadPDF:'⬇ Pobierz / Otwórz PDF',sendArchive:'⬆ Wyślij (Mail / AirDrop / WhatsApp)',
+    ratePerUnit:'Cena netto / szt.',revolutQR:'🔄 Płatność Revolut',revolutScan:'Zeskanuj aby zapłacić przez Revolut',
+    amountDue:'Do zapłaty:',revolut_pdf:'Płatność Revolut — kod QR',
+    ownershipTitle:'KLAUZULA WŁASNOŚCI CZĘŚCI',
+    ownership:'Wszelkie części i materiały wymienione w niniejszym protokole pozostają własnością firmy serwisowej do momentu całkowitego uregulowania należności przez zleceniodawcę. Do czasu zapłaty zamawiający nie jest uprawniony do przeniesienia własności ani swobodnego dysponowania zamontowanymi częściami.',
+    gdprTitle:'INFORMACJA O PRZETWARZANIU DANYCH OSOBOWYCH (RODO)',
+    gdpr:'Administratorem danych osobowych jest firma serwisowa wskazana w nagłówku niniejszego dokumentu. Dane przetwarzane są wyłącznie w celu realizacji zlecenia serwisowego na podstawie art. 6 ust. 1 lit. b RODO. Dane przechowywane są wyłącznie lokalnie na urządzeniu administratora i nie są przekazywane podmiotom trzecim ani przetwarzane w chmurze. Klientowi przysługuje prawo dostępu, sprostowania, usunięcia danych oraz wniesienia skargi do organu nadzorczego.',
+  },
+  en:{
+    protocol:'Service Report',naprawa:'Repair',przeglad:'Inspection',instalacja:'Installation',dostawa:'Delivery',
+    contractor:'Client Data',selectFromDB:'👥 Select from DB',companyName:'Company / Client Name',
+    nip:'VAT No.',phone:'Phone',email:'E-mail',address:'Address',
+    machine:'Machine / Device',model:'Machine model',serial:'SERIAL NUMBER (S/N)',
+    workTitle:'Work & Logistics',workTime:'Work time',travel:'Travel (km)',
+    paid:'BILLABLE',unpaid:'FREE',rateH:'Net rate / h',rateKm:'Net rate / km',
+    fault:'Fault description...',notes:'ENTER YOUR ROUGH NOTES ON WHAT WAS DONE...',
+    parts:'Parts used',addPart:'+ ADD PART',noParts:'No parts added',partName:'PART NAME',
+    summary:'Cost summary',net:'Net',vat:'VAT',gross:'TOTAL GROSS',
+    payment:'Payment method',cash:'Cash',card:'Card',blik:'BLIK',revolut:'Revolut',transfer:'Transfer',
+    photo:'Photo documentation',takePhoto:'📷 TAKE PHOTO',noPhotos:'No photos',
+    sigTech:'Technician signature',sigClient:'Client signature',signHere:'Tap to sign',clear:'Clear',
+    saveBtn:'⬇ SAVE & SEND REPORT',saving:'⏳ Generating...',
+    pdfReady:'✅ PDF ready!',sendBtn:'⬆ Send (Mail / AirDrop / WhatsApp)',close:'Close',
+    clients:'Clients',addClient:'+ ADD NEW CLIENT',noClients:'Client database is empty',
+    archive:'Archive',histTitle:'SERVICE HISTORY',histSub:'All reports chronologically',noArchive:'Archive is empty',
+    firma:'Company',yourFirma:'Your company',technician:'Technician',uploadLogo:'Upload logo',autoSave:'Settings saved automatically',
+    langSettings:'🌐 App language',curSettings:'💰 Currency',
+    tabProtokol:'REPORT',tabKlienci:'CLIENTS',tabArchiwum:'ARCHIVE',tabFirma:'COMPANY',
+    newBtn:'NEW',confirmSig:'✓ Confirm signature',clearSig:'🗑 Clear',cancelSig:'Cancel',
+    signLabel:'Sign here with your finger',editClient:'Edit client',newClient:'New client',
+    saveClient:'💾 Save client',deleteClient:'🗑 Delete client',selectClient:'Select client',
+    noClientsDB:'No clients in database.\nAdd clients in the Clients tab.',
+    contact:'Contact person',downloadPDF:'⬇ Download / Open PDF',sendArchive:'⬆ Send (Mail / AirDrop / WhatsApp)',
+    ratePerUnit:'Net price / unit',revolutQR:'🔄 Revolut Payment',revolutScan:'Scan to pay via Revolut',
+    amountDue:'Amount due:',revolut_pdf:'Revolut Payment — QR code',
+    ownershipTitle:'RETENTION OF TITLE CLAUSE',
+    ownership:'All parts and materials listed in this service report remain the property of the service company until full payment has been received from the client. Until payment is made, the client is not entitled to transfer ownership or freely dispose of the installed parts.',
+    gdprTitle:'PERSONAL DATA PROCESSING INFORMATION (GDPR)',
+    gdpr:'The controller of personal data is the service company indicated in the header of this document. Data is processed solely for the purpose of fulfilling the service order pursuant to Art. 6(1)(b) GDPR. Data is stored locally on the administrator\'s device only and is not shared with third parties or processed in the cloud. The client has the right to access, rectify, delete data and lodge a complaint with the supervisory authority.',
+  },
+  de:{
+    protocol:'Serviceprotokoll',naprawa:'Reparatur',przeglad:'Inspektion',instalacja:'Installation',dostawa:'Lieferung',
+    contractor:'Kundendaten',selectFromDB:'👥 Aus DB wählen',companyName:'Firma / Kundenname',
+    nip:'USt-IdNr.',phone:'Telefon',email:'E-Mail',address:'Adresse',
+    machine:'Maschine / Gerät',model:'Maschinenmodell',serial:'SERIENNUMMER (S/N)',
+    workTitle:'Arbeit & Logistik',workTime:'Arbeitszeit',travel:'Anfahrt (km)',
+    paid:'KOSTENPFLICHTIG',unpaid:'KOSTENLOS',rateH:'Nettopreis / h',rateKm:'Nettopreis / km',
+    fault:'Fehlerbeschreibung...',notes:'NOTIZEN EINGEBEN WAS GEMACHT WURDE...',
+    parts:'Verwendete Teile',addPart:'+ TEIL HINZUFÜGEN',noParts:'Keine Teile hinzugefügt',partName:'TEILENAME',
+    summary:'Kostenzusammenfassung',net:'Netto',vat:'MwSt.',gross:'GESAMTBRUTTO',
+    payment:'Zahlungsmethode',cash:'Bargeld',card:'Karte',blik:'BLIK',revolut:'Revolut',transfer:'Überweisung',
+    photo:'Fotodokumentation',takePhoto:'📷 FOTO AUFNEHMEN',noPhotos:'Keine Fotos',
+    sigTech:'Unterschrift Techniker',sigClient:'Unterschrift Kunde',signHere:'Zum Unterschreiben tippen',clear:'Löschen',
+    saveBtn:'⬇ SPEICHERN & SENDEN',saving:'⏳ Generierung...',
+    pdfReady:'✅ PDF bereit!',sendBtn:'⬆ Senden (Mail / AirDrop / WhatsApp)',close:'Schließen',
+    clients:'Kunden',addClient:'+ NEUEN KUNDEN HINZUFÜGEN',noClients:'Kundendatenbank ist leer',
+    archive:'Archiv',histTitle:'SERVICEHISTORIE',histSub:'Alle Protokolle chronologisch',noArchive:'Archiv ist leer',
+    firma:'Firma',yourFirma:'Ihre Firma',technician:'Techniker',uploadLogo:'Logo hochladen',autoSave:'Daten werden automatisch gespeichert',
+    langSettings:'🌐 App-Sprache',curSettings:'💰 Währung',
+    tabProtokol:'PROTOKOLL',tabKlienci:'KUNDEN',tabArchiwum:'ARCHIV',tabFirma:'FIRMA',
+    newBtn:'NEU',confirmSig:'✓ Unterschrift bestätigen',clearSig:'🗑 Löschen',cancelSig:'Abbrechen',
+    signLabel:'Hier mit dem Finger unterschreiben',editClient:'Kunden bearbeiten',newClient:'Neuer Kunde',
+    saveClient:'💾 Kunden speichern',deleteClient:'🗑 Kunden löschen',selectClient:'Kunden auswählen',
+    noClientsDB:'Keine Kunden in der Datenbank.\nKunden im Kunden-Tab hinzufügen.',
+    contact:'Ansprechpartner',downloadPDF:'⬇ PDF herunterladen / öffnen',sendArchive:'⬆ Senden (Mail / AirDrop / WhatsApp)',
+    ratePerUnit:'Nettopreis / Stück',revolutQR:'🔄 Revolut-Zahlung',revolutScan:'Scannen zum Bezahlen via Revolut',
+    amountDue:'Zu zahlen:',revolut_pdf:'Revolut-Zahlung — QR-Code',
+    ownershipTitle:'EIGENTUMSVORBEHALT',
+    ownership:'Alle in diesem Serviceprotokoll aufgeführten Teile und Materialien bleiben bis zur vollständigen Bezahlung durch den Auftraggeber Eigentum des Serviceunternehmens. Bis zur vollständigen Zahlung ist der Auftraggeber nicht berechtigt, das Eigentum zu übertragen oder frei über die eingebauten Teile zu verfügen.',
+    gdprTitle:'INFORMATION ZUR DATENVERARBEITUNG (DSGVO)',
+    gdpr:'Verantwortlicher für die personenbezogenen Daten ist das in der Kopfzeile genannte Serviceunternehmen. Die Daten werden ausschließlich zur Durchführung des Serviceauftrags gemäß Art. 6 Abs. 1 lit. b DSGVO verarbeitet. Die Daten werden ausschließlich lokal auf dem Gerät des Administrators gespeichert und nicht an Dritte weitergegeben oder in der Cloud verarbeitet. Der Kunde hat das Recht auf Auskunft, Berichtigung, Löschung und Beschwerde bei der Aufsichtsbehörde.',
+  },
+  uk:{
+    protocol:'Сервісний протокол',naprawa:'Ремонт',przeglad:'Огляд',instalacja:'Монтаж',dostawa:'Доставка',
+    contractor:'Дані клієнта',selectFromDB:'👥 Обрати з бази',companyName:'Компанія / Ім\'я клієнта',
+    nip:'Код ЄДРПОУ / ПДВ',phone:'Телефон',email:'E-mail',address:'Адреса',
+    machine:'Машина / Пристрій',model:'Модель',serial:'СЕРІЙНИЙ НОМЕР (S/N)',
+    workTitle:'Роботи та логістика',workTime:'Час роботи',travel:'Виїзд (км)',
+    paid:'ПЛАТНО',unpaid:'БЕЗКОШТОВНО',rateH:'Ціна нетто / год',rateKm:'Ціна нетто / км',
+    fault:'Опис несправності...',notes:'ВВЕДІТЬ НОТАТКИ ПРО ВИКОНАНІ РОБОТИ...',
+    parts:'Використані запчастини',addPart:'+ ДОДАТИ ЗАПЧАСТИНУ',noParts:'Немає запчастин',partName:'НАЗВА ЗАПЧАСТИНИ',
+    summary:'Підсумок витрат',net:'Нетто',vat:'ПДВ',gross:'РАЗОМ БРУТТО',
+    payment:'Спосіб оплати',cash:'Готівка',card:'Картка',blik:'BLIK',revolut:'Revolut',transfer:'Переказ',
+    photo:'Фотодокументація',takePhoto:'📷 ЗРОБИТИ ФОТО',noPhotos:'Немає фото',
+    sigTech:'Підпис техніка',sigClient:'Підпис клієнта',signHere:'Торкніться для підпису',clear:'Очистити',
+    saveBtn:'⬇ ЗБЕРЕГТИ І НАДІСЛАТИ',saving:'⏳ Генерація...',
+    pdfReady:'✅ PDF готовий!',sendBtn:'⬆ Надіслати (Mail / AirDrop / WhatsApp)',close:'Закрити',
+    clients:'Клієнти',addClient:'+ ДОДАТИ КЛІЄНТА',noClients:'База клієнтів порожня',
+    archive:'Архів',histTitle:'ІСТОРІЯ ОБСЛУГОВУВАННЯ',histSub:'Всі протоколи хронологічно',noArchive:'Архів порожній',
+    firma:'Компанія',yourFirma:'Ваша компанія',technician:'Технік',uploadLogo:'Завантажити логотип',autoSave:'Дані зберігаються автоматично',
+    langSettings:'🌐 Мова додатку',curSettings:'💰 Валюта',
+    tabProtokol:'ПРОТОКОЛ',tabKlienci:'КЛІЄНТИ',tabArchiwum:'АРХІВ',tabFirma:'КОМПАНІЯ',
+    newBtn:'НОВИЙ',confirmSig:'✓ Підтвердити підпис',clearSig:'🗑 Очистити',cancelSig:'Скасувати',
+    signLabel:'Підпишіть тут пальцем',editClient:'Редагувати клієнта',newClient:'Новий клієнт',
+    saveClient:'💾 Зберегти клієнта',deleteClient:'🗑 Видалити клієнта',selectClient:'Обрати клієнта',
+    noClientsDB:'Немає клієнтів у базі.\nДодайте клієнтів у вкладці Клієнти.',
+    contact:'Контактна особа',downloadPDF:'⬇ Завантажити / Відкрити PDF',sendArchive:'⬆ Надіслати (Mail / AirDrop / WhatsApp)',
+    ratePerUnit:'Ціна нетто / шт.',revolutQR:'🔄 Оплата Revolut',revolutScan:'Скануйте для оплати через Revolut',
+    amountDue:'До оплати:',revolut_pdf:'Оплата Revolut — QR-код',
+    ownershipTitle:'ЗАСТЕРЕЖЕННЯ ПРО ПРАВО ВЛАСНОСТІ',
+    ownership:'Усі запчастини та матеріали, зазначені в цьому сервісному протоколі, залишаються власністю сервісної компанії до моменту повної оплати замовником. До моменту оплати замовник не має права передавати право власності або вільно розпоряджатися встановленими запчастинами.',
+    gdprTitle:'ІНФОРМАЦІЯ ПРО ОБРОБКУ ПЕРСОНАЛЬНИХ ДАНИХ (GDPR)',
+    gdpr:'Адміністратором персональних даних є сервісна компанія, зазначена в заголовку цього документа. Дані обробляються виключно з метою виконання сервісного замовлення відповідно до ст. 6(1)(b) GDPR. Дані зберігаються виключно локально на пристрої адміністратора і не передаються третім особам та не обробляються у хмарі. Клієнт має право на доступ, виправлення, видалення даних та подачу скарги до наглядового органу.',
+  }
+};
+
+const CURRENCIES={
+  PLN:{symbol:'zł',name:'PLN',vat:23},
+  EUR:{symbol:'€',name:'EUR',vat:20},
+  USD:{symbol:'$',name:'USD',vat:0},
+  GBP:{symbol:'£',name:'GBP',vat:20}
+};
+
+// ── STATE ──────────────────────────────────────────
+const S={
+  id:'',date:'',type:'',
+  wPaid:true,tPaid:true,pay:'',
+  parts:[],photos:[],tSig:'',cSig:'',
+  clients:[],archive:[],firma:{},
+  editCid:null,sigTarget:null,sigLines:false,curArchId:null,
+  lang:'pl',currency:'PLN'
+};
+
+// Shorthand translation getter
+function t(k){return (TR[S.lang]||TR.pl)[k]||TR.pl[k]||k;}
+function cur(){return CURRENCIES[S.currency]||CURRENCIES.PLN;}
+function fmtMoney(v){const c=cur();return c.symbol+v.toFixed(2);}
+function vatRate(){return cur().vat/100;}
+
+function uid(){return String(Math.floor(100000+Math.random()*900000));}
+function today(){return new Date().toLocaleDateString(S.lang==='pl'?'pl-PL':S.lang==='de'?'de-DE':S.lang==='uk'?'uk-UA':'en-GB');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg,ms=4000){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',ms);}
+function gv(id){return(document.getElementById(id)||{}).value||'';}
+
+// ── WELCOME SCREEN ─────────────────────────────────
+let _wLang='pl', _wCur='PLN';
+
+function selLang(btn){
+  _wLang=btn.dataset.lang;
+  document.querySelectorAll('[data-lang]').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('[data-lang="'+_wLang+'"]').forEach(b=>b.classList.add('on'));
+  // Update currency label in welcome
+  const labels={pl:'💰 Waluta',en:'💰 Currency',de:'💰 Währung',uk:'💰 Валюта'};
+  document.getElementById('wlbl-currency').textContent=labels[_wLang]||'💰 Currency';
+}
+
+function selCur(btn){
+  _wCur=btn.dataset.cur;
+  document.querySelectorAll('[data-cur]').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('[data-cur="'+_wCur+'"]').forEach(b=>b.classList.add('on'));
+}
+
+function fixLayout(){
+  const hdrH=56, navH=70;
+  const wh=window.innerHeight;
+  document.getElementById('pages').style.top=hdrH+'px';
+  document.getElementById('pages').style.height=(wh-hdrH-navH)+'px';
+  document.querySelector('nav').style.top=(wh-navH)+'px';
+}
+window.addEventListener('load',fixLayout);
+window.addEventListener('resize',fixLayout);
+
+function startApp(){
+  S.lang=_wLang;
+  S.currency=_wCur;
+  const wel=document.getElementById('welcome');
+  if(wel) wel.parentNode.removeChild(wel);
+  S.id=uid(); S.date=today(); S.type=t('naprawa');
+  applyTranslations();
+  document.getElementById('pid').textContent='ID: '+S.id;
+  document.getElementById('pdate').textContent=S.date;
+  markLangCurButtons();
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg-protokol').classList.add('on');
+  renderParts();calcSum();renderSigs();
+  fixLayout();
+}
+
+function applyTranslations(){
+  const L=TR[S.lang]||TR.pl;
+  const C=cur();
+  // Nav tabs
+  const tabs=document.querySelectorAll('.tab');
+  const tabKeys=['tabProtokol','tabKlienci','tabArchiwum','tabFirma'];
+  tabs.forEach((tab,i)=>{
+    const svg=tab.querySelector('svg');
+    tab.textContent='';
+    if(svg) tab.appendChild(svg);
+    tab.appendChild(document.createTextNode(L[tabKeys[i]]||tabKeys[i]));
+  });
+  // Header new button
+  const nb=document.querySelector('.nbtn');
+  if(nb){ const svg=nb.querySelector('svg'); nb.textContent=''; if(svg)nb.appendChild(svg); nb.appendChild(document.createTextNode(' '+L.newBtn)); }
+  // Protocol type buttons
+  const types=[L.naprawa,L.przeglad,L.instalacja,L.dostawa];
+  document.querySelectorAll('.tbtn').forEach((b,i)=>{ if(types[i])b.textContent=types[i]; });
+  // Labels via data-tr attributes
+  document.querySelectorAll('[data-tr]').forEach(el=>{
+    const k=el.getAttribute('data-tr');
+    if(L[k]) el.textContent=L[k];
+  });
+  // Placeholders via data-ph
+  document.querySelectorAll('[data-ph]').forEach(el=>{
+    const k=el.getAttribute('data-ph');
+    if(L[k]) el.placeholder=L[k];
+  });
+  // Payment buttons
+  const payKeys=['cash','card','blik','revolut','transfer'];
+  document.querySelectorAll('.pbtn').forEach((b,i)=>{
+    const lbl=b.querySelector('.pl');
+    if(lbl && payKeys[i]) lbl.textContent=L[payKeys[i]]||payKeys[i];
+  });
+  // Currency in summary labels
+  const vatLbl=document.querySelector('#sumcard .srow:nth-child(2) span');
+  if(vatLbl) vatLbl.textContent=L.vat+' ('+C.vat+'%)';
+  // Save button
+  const sb=document.getElementById('savebtn');
+  if(sb) sb.textContent=L.saveBtn;
+  // Firma settings labels
+  const ls=document.getElementById('lbl-lang-settings');
+  if(ls) ls.textContent=L.langSettings;
+  const cs=document.getElementById('lbl-cur-settings');
+  if(cs) cs.textContent=L.curSettings;
+  // wpill/tpill
+  document.getElementById('wpill').textContent=S.wPaid?L.paid:L.unpaid;
+  document.getElementById('tpill').textContent=S.tPaid?L.paid:L.unpaid;
+  // Re-render dynamic sections
+  renderParts(); calcSum();
+  if(document.getElementById('clist').innerHTML) renderC('');
+  if(document.getElementById('alist').innerHTML) renderA('');
+}
+
+function markLangCurButtons(){
+  document.querySelectorAll('.sbtn2[data-lang]').forEach(b=>b.classList.toggle('on',b.dataset.lang===S.lang));
+  document.querySelectorAll('.sbtn2[data-cur]').forEach(b=>b.classList.toggle('on',b.dataset.cur===S.currency));
+}
+
+function changeLang(btn){
+  S.lang=btn.dataset.lang;
+  S.date=today();
+  S.type=t('naprawa');
+  applyTranslations();
+  markLangCurButtons();
+  toast('Language changed / Język zmieniony');
+}
+
+function changeCur(btn){
+  S.currency=btn.dataset.cur;
+  applyTranslations();
+  markLangCurButtons();
+  toast('Currency / Waluta: '+S.currency);
+}
+
+// ── INIT ───────────────────────────────────────────
+// Show welcome screen on first load — startApp() called by button
+
+// ── NAV ────────────────────────────────────────────
+function goTab(name,btn){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(tb=>{tb.classList.remove('on');tb.style.color='rgba(240,244,255,.35)';});
+  const pg = document.getElementById('pg-'+name);
+  if(pg) pg.classList.add('on');
+  btn.classList.add('on');
+  btn.style.color='#00D4E8';
+  if(name==='archiwum')renderA('');
+  if(name==='klienci')renderC('');
+}
+
+// ── PROTOCOL ───────────────────────────────────────
+function newProto(){
+  S.id=uid();S.date=today();S.type=t('naprawa');
+  S.wPaid=true;S.tPaid=true;S.pay='';
+  S.parts=[];S.photos=[];S.tSig='';S.cSig='';
+  ['p-name','p-nip','p-phone','p-email','p-address','p-model','p-serial','p-wt','p-wr','p-tr','p-trr','p-fault','p-notes']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('pid').textContent='ID: '+S.id;
+  document.getElementById('pdate').textContent=S.date;
+  document.querySelectorAll('.tbtn').forEach((b,i)=>b.classList.toggle('on',i===0));
+  document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('wpill').textContent=t('paid');
+  document.getElementById('tpill').textContent=t('paid');
+  document.getElementById('wrate').style.display='flex';
+  document.getElementById('trate').style.display='flex';
+  document.getElementById('serr').style.display='none';
+  const sp=document.getElementById('sendpanel');if(sp)sp.style.display='none';
+  renderParts();calcSum();renderSigs();resetPhotos();
+  goTab('protokol',document.querySelector('.tab'));
+  document.getElementById('pscroll').scrollTop=0;
+}
+
+function setTyp(btn,tk){document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.type=t(tk);}
+
+function tog(w){
+  if(w==='work'){S.wPaid=!S.wPaid;document.getElementById('wpill').textContent=S.wPaid?t('paid'):t('unpaid');document.getElementById('wrate').style.display=S.wPaid?'flex':'none';}
+  else{S.tPaid=!S.tPaid;document.getElementById('tpill').textContent=S.tPaid?t('paid'):t('unpaid');document.getElementById('trate').style.display=S.tPaid?'flex':'none';}
+  calcSum();
+}
+
+function setPay(btn){
+  const p=btn.dataset.pay;
+  if(S.pay===p){S.pay='';btn.classList.remove('on');return;}
+  document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');S.pay=p;
+}
+
+// ── PARTS ──────────────────────────────────────────
+function addPart(){S.parts.push({id:Date.now(),name:'',qty:1,paid:true,price:''});renderParts();}
+function delPart(id){S.parts=S.parts.filter(p=>p.id!==id);renderParts();calcSum();}
+function updPart(id,k,v){const p=S.parts.find(x=>x.id===id);if(p)p[k]=v;}
+function togPart(id){const p=S.parts.find(x=>x.id===id);if(p){p.paid=!p.paid;renderParts();calcSum();}}
+function renderParts(){
+  const el=document.getElementById('plist');
+  if(!S.parts.length){el.innerHTML=`<div style="color:var(--lg);font-size:13px;text-align:center;padding:10px 0">${t('noParts')}</div>`;return;}
+  el.innerHTML=S.parts.map(p=>`<div class="prow"><div class="ptop"><input class="pname" placeholder="${t('partName')}" value="${esc(p.name)}" oninput="updPart(${p.id},'name',this.value)"><input class="pqty" type="number" min="1" value="${p.qty}" oninput="updPart(${p.id},'qty',this.value);calcSum()"><button class="pill" onclick="togPart(${p.id})">${p.paid?t('paid'):t('unpaid')}</button><button class="pdel" onclick="delPart(${p.id})">🗑</button></div>${p.paid?`<div class="rrow"><span style="font-size:12px;color:var(--gr);font-weight:600;flex:1">${t('ratePerUnit')} (${cur().symbol})</span><input class="pinp" type="number" min="0" placeholder="0.00" value="${esc(p.price)}" oninput="updPart(${p.id},'price',this.value);calcSum()"><span style="font-size:13px;color:var(--gr);font-weight:600">${cur().symbol}</span></div>`:''}</div>`).join('');
+}
+
+// ── SUMMARY ────────────────────────────────────────
+function calcSum(){
+  const VAT=vatRate();
+  const wt=parseFloat(gv('p-wt')||0),wr=parseFloat(gv('p-wr')||0),tr=parseFloat(gv('p-tr')||0),trr=parseFloat(gv('p-trr')||0);
+  const wn=S.wPaid?wt*wr:0,tn=S.tPaid?tr*trr:0;
+  const pn=S.parts.filter(p=>p.paid).reduce((s,p)=>s+parseFloat(p.price||0)*parseFloat(p.qty||1),0);
+  const net=wn+tn+pn;
+  if(!net){document.getElementById('sumcard').style.display='none';return;}
+  document.getElementById('sumcard').style.display='block';
+  const vat=net*VAT,gross=net+vat;
+  const C=cur();
+  let rows='';
+  if(wn>0)rows+=`<div class="srow"><span>${t('workTime')} (${wt}h × ${wr} ${C.symbol})</span><span>${fmtMoney(wn)}</span></div>`;
+  if(tn>0)rows+=`<div class="srow"><span>${t('travel')} (${tr}km × ${trr} ${C.symbol})</span><span>${fmtMoney(tn)}</span></div>`;
+  S.parts.filter(p=>p.paid&&p.price>0).forEach(p=>rows+=`<div class="srow"><span>${esc(p.name)||t('parts')} (${p.qty} szt.)</span><span>${fmtMoney(parseFloat(p.price)*parseFloat(p.qty))}</span></div>`);
+  document.getElementById('sumrows').innerHTML=rows;
+  document.getElementById('snet').textContent=fmtMoney(net);
+  document.getElementById('svat').textContent=fmtMoney(vat);
+  document.getElementById('sgross').textContent=fmtMoney(gross);
+}
+
+// ── PHOTOS ─────────────────────────────────────────
+function addPhotos(inp){Array.from(inp.files).forEach(f=>{const r=new FileReader();r.onload=e=>{S.photos.push(e.target.result);renderPhotos();};r.readAsDataURL(f);});inp.value='';}
+function renderPhotos(){
+  const em=document.getElementById('fempty'),gr=document.getElementById('fgrid');
+  if(!S.photos.length){em.style.display='flex';gr.style.display='none';return;}
+  em.style.display='none';gr.style.display='grid';
+  gr.innerHTML=S.photos.map((ph,i)=>`<div style="position:relative"><img src="${ph}" style="width:100%;height:90px;object-fit:cover;border-radius:10px"><button onclick="rmPhoto(${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.5);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:12px">✕</button></div>`).join('');
+}
+function rmPhoto(i){S.photos.splice(i,1);renderPhotos();}
+function resetPhotos(){S.photos=[];renderPhotos();}
+
+// ── SIGNATURES ─────────────────────────────────────
+let sCtx=null,sDraw=false;
+function openSig(target){
+  S.sigTarget=target;S.sigLines=false;
+  document.getElementById('siglbl').textContent=target==='tech'?t('sigTech'):t('sigClient');
+  document.getElementById('sig-modal').classList.add('on');
+  document.body.style.overflow='hidden';
+  const cv=document.getElementById('sigcv');
+  cv.addEventListener('touchstart',sStart,{passive:false,capture:true});
+  cv.addEventListener('touchmove',sMove,{passive:false,capture:true});
+  cv.addEventListener('touchend',sEnd,{passive:false,capture:true});
+  cv.addEventListener('mousedown',sStart);cv.addEventListener('mousemove',sMove);cv.addEventListener('mouseup',sEnd);
+  // Wait for modal animation then measure
+  setTimeout(()=>{
+    const wrap=cv.parentElement;
+    const dpr=window.devicePixelRatio||1;
+    const w=wrap.clientWidth;
+    const h=wrap.clientHeight;
+    cv.width=w*dpr;cv.height=h*dpr;
+    cv.style.width=w+'px';cv.style.height=h+'px';
+    sCtx=cv.getContext('2d');
+    sCtx.scale(dpr,dpr);
+    sCtx.clearRect(0,0,w,h);
+  },150);
+}
+function sXY(e){const cv=document.getElementById('sigcv'),r=cv.getBoundingClientRect(),s=e.touches?e.touches[0]:e;return{x:s.clientX-r.left,y:s.clientY-r.top};}
+function sStart(e){e.preventDefault();e.stopPropagation();sDraw=true;const p=sXY(e);if(!sCtx)return;sCtx.beginPath();sCtx.moveTo(p.x,p.y);}
+function sMove(e){e.preventDefault();e.stopPropagation();if(!sDraw||!sCtx)return;const p=sXY(e);sCtx.lineWidth=3;sCtx.lineCap='round';sCtx.lineJoin='round';sCtx.strokeStyle='#00D4E8';sCtx.lineTo(p.x,p.y);sCtx.stroke();S.sigLines=true;}
+function sEnd(e){e.preventDefault();sDraw=false;}
+function sigClear(){const cv=document.getElementById('sigcv');sCtx.clearRect(0,0,cv.offsetWidth,cv.offsetHeight);S.sigLines=false;}
+function sigClose(){
+  document.getElementById('sig-modal').classList.remove('on');
+  document.body.style.overflow='';
+  const cv=document.getElementById('sigcv');
+  cv.removeEventListener('touchstart',sStart,{capture:true});cv.removeEventListener('touchmove',sMove,{capture:true});cv.removeEventListener('touchend',sEnd,{capture:true});
+  cv.removeEventListener('mousedown',sStart);cv.removeEventListener('mousemove',sMove);cv.removeEventListener('mouseup',sEnd);
+}
+function sigConfirm(){
+  if(S.sigLines){const data=document.getElementById('sigcv').toDataURL('image/png');if(S.sigTarget==='tech')S.tSig=data;else S.cSig=data;renderSigs();}
+  sigClose();
+}
+function clearSig(t){if(t==='tech')S.tSig='';else S.cSig='';renderSigs();}
+function renderSigs(){
+  ['tech','client'].forEach(t=>{
+    const sig=t==='tech'?S.tSig:S.cSig,box=document.getElementById(t==='tech'?'st':'sc'),clr=document.getElementById(t==='tech'?'stc':'scc');
+    if(sig){box.innerHTML=`<img src="${sig}">`;box.classList.add('ok');clr.style.display='block';}
+    else{box.innerHTML='<div class="sighint">✍️<br>Dotknij aby podpisać</div>';box.classList.remove('ok');clr.style.display='none';}
+  });
+}
+
+// ── PDF ────────────────────────────────────────────
+async function makePDF(proto){
+  // Normalize Polish/special chars for jsPDF latin encoding
+  const pl=(s)=>String(s||'')
+    .replace(/ą/g,'a').replace(/Ą/g,'A')
+    .replace(/ć/g,'c').replace(/Ć/g,'C')
+    .replace(/ę/g,'e').replace(/Ę/g,'E')
+    .replace(/ł/g,'l').replace(/Ł/g,'L')
+    .replace(/ń/g,'n').replace(/Ń/g,'N')
+    .replace(/ó/g,'o').replace(/Ó/g,'O')
+    .replace(/ś/g,'s').replace(/Ś/g,'S')
+    .replace(/ź/g,'z').replace(/Ź/g,'Z')
+    .replace(/ż/g,'z').replace(/Ż/g,'Z')
+    .replace(/ü/g,'u').replace(/ö/g,'o').replace(/ä/g,'a')
+    .replace(/ß/g,'ss')
+    .replace(/і/g,'i').replace(/є/g,'e').replace(/ї/g,'i').replace(/а/g,'a');
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,M=18,CW=W-M*2;
+  const VAT=vatRate();
+  const C=cur();
+  const wn=proto.wPaid?proto.wt*proto.wr:0,tn=proto.tPaid?proto.tr*proto.trr:0;
+  const pn=proto.parts.filter(p=>p.paid).reduce((s,p)=>s+parseFloat(p.price||0)*parseFloat(p.qty||1),0);
+  const net=wn+tn+pn,vat=net*VAT,gross=net+vat;
+  const PL={cash:t('cash'),card:t('card'),blik:'BLIK',revolut:'Revolut',transfer:t('transfer')};
+  const fm=(v)=>C.symbol+v.toFixed(2);
+  let y=M;
+  const chk=(n=10)=>{if(y+n>277){doc.addPage();y=M;}};
+  const hl=(yy,a=M,b=W-M,w=.3)=>{doc.setLineWidth(w);doc.setDrawColor(220,220,220);doc.line(a,yy,b,yy);};
+  const sec=(txt)=>{chk(12);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(37,99,235);doc.text(pl(txt).toUpperCase(),M,y);doc.setDrawColor(37,99,235);doc.setLineWidth(.5);doc.line(M,y+1,W-M,y+1);y+=6;};
+  const trow=(cols,ws,ry,hdr,shade)=>{
+    if(shade){doc.setFillColor(248,250,255);doc.rect(M,ry-4,CW,6,'F');}
+    if(hdr){doc.setFillColor(240,244,255);doc.rect(M,ry-4,CW,6,'F');}
+    let x=M;cols.forEach((c,i)=>{doc.setFontSize(8.5);doc.setFont('helvetica',hdr?'bold':'normal');doc.setTextColor(hdr?37:30,hdr?99:30,hdr?235:30);doc.text(doc.splitTextToSize(pl(String(c||'')),ws[i]-2),x+1,ry);x+=ws[i];});
+    hl(ry+2,M,W-M,.2);return ry+6;
+  };
+  // Header — elegant mixed-weight logo
+  doc.setFontSize(22);doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);doc.text('h',M,y);
+  const hw1=doc.getTextWidth('h');
+  doc.setFontSize(15);doc.setFont('helvetica','normal');doc.setTextColor(100,100,100);doc.text('ampol',M+hw1,y);
+  const hw2=hw1+doc.getTextWidth('ampol');
+  doc.setFontSize(22);doc.setFont('helvetica','bold');doc.setTextColor(37,99,235);doc.text('P',M+hw2,y);
+  const hw3=hw2+doc.getTextWidth('P');
+  doc.setFontSize(13);doc.setFont('helvetica','normal');doc.setTextColor(100,140,235);doc.text('ro',M+hw3,y);
+  doc.setFillColor(232,237,255);doc.roundedRect(W-M-28,y-6,28,8,2,2,'F');
+  doc.setFontSize(8);doc.text(pl(proto.type),W-M-14,y-1,{align:'center'});
+  y+=4;doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(120,120,120);
+  doc.text('Protokol serwisowy nr '+proto.id,M,y);doc.text(proto.date,W-M,y,{align:'right'});
+  y+=3;hl(y,M,W-M,.8);y+=8;
+  // Kontrahent
+  sec(t('contractor'));
+  doc.setFontSize(12);doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);doc.text(pl(proto.name)||'—',M,y);y+=6;
+  const c1=M,c2=M+CW/2;
+  doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.setTextColor(120,120,120);
+  doc.text(pl(t('nip')),c1,y);doc.text(pl(t('phone')),c2,y);y+=4;
+  doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
+  doc.text(pl(proto.nip)||'—',c1,y);doc.text(pl(proto.phone)||'—',c2,y);y+=6;
+  doc.setFont('helvetica','bold');doc.setTextColor(120,120,120);
+  doc.text(pl(t('address')),c1,y);doc.text(pl(t('email')),c2,y);y+=4;
+  doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
+  doc.text(pl(proto.address)||'—',c1,y);doc.text(pl(proto.email)||'—',c2,y);y+=8;
+  // Maszyna
+  sec(t('machine'));
+  doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.setTextColor(120,120,120);
+  doc.text(pl(t('model')),c1,y);doc.text(pl(t('serial')),c2,y);y+=4;
+  doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
+  doc.text(pl(proto.model)||'—',c1,y);doc.text(pl(proto.serial)||'—',c2,y);y+=8;
+  // Czynnosci
+  sec(t('workTitle'));
+  let ry=y;
+  ry=trow(['',pl(t('travel')).split(' ')[0],pl(t('rateH')).split('/')[0].trim(),''],[70,30,50,CW-150],ry,true,false);
+  ry=trow([pl(t('workTime')),(proto.wt||'—')+' h',proto.wPaid?(proto.wr||'—')+' '+C.symbol+'/h':'—',proto.wPaid?pl(t('paid')):pl(t('unpaid'))],[70,30,50,CW-150],ry,false,false);
+  ry=trow([pl(t('travel')),(proto.tr||'—')+' km',proto.tPaid?(proto.trr||'—')+' '+C.symbol+'/km':'—',proto.tPaid?pl(t('paid')):pl(t('unpaid'))],[70,30,50,CW-150],ry,false,true);
+  y=ry+4;
+  if(proto.fault){chk(16);sec('Usterka');doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);const ls=doc.splitTextToSize(pl(proto.fault),CW);doc.text(ls,M,y);y+=ls.length*5+4;}
+  if(proto.notes){chk(16);sec('Wykonane czynnosci');doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);const ls=doc.splitTextToSize(pl(proto.notes),CW);doc.text(ls,M,y);y+=ls.length*5+4;}
+  if(proto.parts.length){chk(20);sec(pl(t('parts')));let py=y;
+    py=trow([pl(t('partName')),'Ilosc',C.symbol,'','Status'],[65,20,35,35,CW-155],py,true,false);
+    proto.parts.forEach((p,i)=>{chk(8);const v=p.paid?(parseFloat(p.price||0)*parseFloat(p.qty||1)).toFixed(2)+' '+C.symbol:'—';
+      py=trow([pl(p.name)||'—',p.qty+' x',p.paid?(p.price||'—')+' '+C.symbol:'—',v,p.paid?pl(t('paid')):pl(t('unpaid'))],[65,20,35,35,CW-155],py,false,i%2===1);});y=py+4;}
+  if(net>0){chk(44);sec(pl(t('summary')));
+    doc.setFillColor(240,245,255);doc.roundedRect(M,y-2,CW,42,3,3,'F');
+    doc.setDrawColor(37,99,235);doc.setLineWidth(.4);doc.roundedRect(M,y-2,CW,42,3,3,'S');
+    let sy=y+4;
+    const sr=(lb,v,bold,big)=>{doc.setFontSize(big?11:9);doc.setFont('helvetica',bold?'bold':'normal');doc.setTextColor(bold?37:60,bold?99:60,bold?235:60);doc.text(pl(lb),M+4,sy);doc.text(v,W-M-4,sy,{align:'right'});if(!big)hl(sy+1.5,M+2,W-M-2,.15);sy+=6;};
+    if(wn>0)sr(pl(t('workTime'))+' ('+proto.wt+'h x '+proto.wr+' '+C.symbol+')',fm(wn));
+    if(tn>0)sr(pl(t('travel'))+' ('+proto.tr+'km x '+proto.trr+' '+C.symbol+')',fm(tn));
+    proto.parts.filter(p=>p.paid&&p.price>0).forEach(p=>sr(pl(p.name||t('parts'))+' ('+p.qty+'x)',fm(parseFloat(p.price)*parseFloat(p.qty))));
+    sy+=2;sr(pl(t('net')),fm(net),true);sr(pl(t('vat'))+' ('+C.vat+'%)',fm(vat));sr(pl(t('gross')),fm(gross),true,true);
+    if(proto.pay){doc.setFillColor(232,237,255);doc.roundedRect(M+4,sy,40,7,2,2,'F');doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(37,99,235);doc.text(pl(PL[proto.pay]||proto.pay),M+24,sy+5,{align:'center'});sy+=10;}
+    y=sy+4;}
+  if(proto.photos.length){chk(50);sec('Dokumentacja fotograficzna');
+    const pw=55,ph=42,gap=4;let px=M,py2=y;
+    for(const src of proto.photos){if(px+pw>W-M){px=M;py2+=ph+gap;chk(ph+8);}try{doc.addImage(src,'JPEG',px,py2,pw,ph,undefined,'FAST');}catch(e){}px+=pw+gap;}
+    y=py2+ph+8;}
+  chk(50);sec(t('sigTech')+' / '+t('sigClient'));
+  const sh=36,sw=CW/2-6;
+  doc.setDrawColor(200,200,200);doc.setLineWidth(.4);
+  doc.roundedRect(M,y,sw,sh,2,2,'S');
+  if(proto.tSig){try{doc.addImage(proto.tSig,'PNG',M+2,y+2,sw-4,sh-10,undefined,'FAST');}catch(e){}}
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100,100,100);
+  doc.text(t('sigTech'),M+sw/2,y+sh-2,{align:'center'});
+  const cx=M+sw+12;
+  doc.roundedRect(cx,y,sw,sh,2,2,'S');
+  if(proto.cSig){try{doc.addImage(proto.cSig,'PNG',cx+2,y+2,sw-4,sh-10,undefined,'FAST');}catch(e){}}
+  doc.text(t('sigClient'),cx+sw/2,y+sh-2,{align:'center'});
+  y+=sh+10;
+
+  // Revolut QR
+  if(proto.pay==='revolut'&&proto.revUrl){
+    chk(60);sec(t('revolut_pdf'));
+    try{
+      const qrSrc='https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=5&data='+encodeURIComponent(proto.revUrl);
+      const qrImg=await new Promise((res,rej)=>{
+        const img=new Image();img.crossOrigin='anonymous';
+        img.onload=()=>{const cv=document.createElement('canvas');cv.width=150;cv.height=150;cv.getContext('2d').drawImage(img,0,0);res(cv.toDataURL('image/png'));};
+        img.onerror=()=>rej(new Error('QR'));img.src=qrSrc;
+      });
+      doc.addImage(qrImg,'PNG',M,y,40,40);
+      doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(37,99,235);
+      doc.text(t('revolutScan'),M+48,y+10);
+      doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
+      doc.text(proto.revUrl,M+48,y+18);
+      if(proto.gross>0){doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);doc.text(t('amountDue')+' '+C.symbol+proto.gross.toFixed(2),M+48,y+26);}
+      y+=48;
+    }catch(e){}
+  }
+
+  // ── LEGAL CLAUSES ──
+  chk(50);
+  y+=4;
+  doc.setDrawColor(220,220,220);doc.setLineWidth(0.5);doc.line(M,y,W-M,y);
+  y+=6;
+
+  // Ownership clause
+  doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(60,60,60);
+  doc.text(pl(t('ownershipTitle')),M,y); y+=4;
+  doc.setFont('helvetica','normal');doc.setTextColor(90,90,90);
+  const owLines=doc.splitTextToSize(pl(t('ownership')),CW);
+  doc.text(owLines,M,y); y+=owLines.length*3.5+5;
+
+  chk(30);
+  // GDPR clause
+  doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(60,60,60);
+  doc.text(pl(t('gdprTitle')),M,y); y+=4;
+  doc.setFont('helvetica','normal');doc.setTextColor(90,90,90);
+  const gdprLines=doc.splitTextToSize(pl(t('gdpr')),CW);
+  doc.text(gdprLines,M,y); y+=gdprLines.length*3.5+4;
+
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(180,180,180);hl(287,M,W-M,.2);doc.text('hampolPro · Nr '+proto.id+' · '+new Date().toLocaleDateString(),M,291);doc.text(i+'/'+pages,W-M,291,{align:'right'});}
+  return doc;
+}
+
+async function save(){
+  const btn=document.getElementById('savebtn');
+  btn.textContent='⏳ Generowanie...';btn.disabled=true;
+  document.getElementById('serr').style.display='none';
+  try{
+    if(!window.jspdf){
+      await new Promise((res,rej)=>{
+        const s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        s.onload=res;s.onerror=()=>rej(new Error('Brak internetu'));
+        document.head.appendChild(s);
+      });
+    }
+    const proto={
+      id:S.id,date:S.date,type:S.type,
+      name:gv('p-name'),nip:gv('p-nip'),phone:gv('p-phone'),email:gv('p-email'),address:gv('p-address'),
+      model:gv('p-model'),serial:gv('p-serial'),
+      wt:parseFloat(gv('p-wt')||0),wr:parseFloat(gv('p-wr')||0),wPaid:S.wPaid,
+      tr:parseFloat(gv('p-tr')||0),trr:parseFloat(gv('p-trr')||0),tPaid:S.tPaid,
+      fault:gv('p-fault'),notes:gv('p-notes'),
+      parts:[...S.parts],photos:[...S.photos],
+      tSig:S.tSig,cSig:S.cSig,pay:S.pay
+    };
+    const wn=proto.wPaid?proto.wt*proto.wr:0;
+    const tn=proto.tPaid?proto.tr*proto.trr:0;
+    const pn=proto.parts.filter(p=>p.paid).reduce((s,p)=>s+parseFloat(p.price||0)*parseFloat(p.qty||1),0);
+    proto.gross=(wn+tn+pn)*1.23;
+    proto.revUrl=proto.pay==='revolut'?getRevolutUrl():'';
+    const doc=await makePDF(proto);
+    const dataUri=doc.output('datauristring');
+    S.archive.push({id:proto.id,type:proto.type,client:proto.name,model:proto.model,date:proto.date,dataUri});
+
+    // Pobierz PDF przez anchor click — działa na iOS Safari z file://
+    const fname='Protokol_'+proto.id+'.pdf';
+    const a=document.createElement('a');
+    a.href=dataUri;
+    a.download=fname;
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    showSendModal(proto.id, dataUri, proto);
+
+  }catch(e){
+    const err=document.getElementById('serr');
+    err.textContent='Błąd: '+e.message;
+    err.style.display='block';
+  }
+  btn.textContent=t('saveBtn');btn.disabled=false;
+}
+
+function showSendModal(id,dataUri,proto){
+  const b64=dataUri.split(',')[1],bin=atob(b64),arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+  S._sendBlob=new Blob([arr],{type:'application/pdf'});
+  S._sendId=id;
+  const panel=document.getElementById('sendpanel');
+  const sub=document.getElementById('sendpanel-sub');
+  const hdr=panel&&panel.querySelector('div');
+  if(hdr) hdr.textContent=t('pdfReady');
+  if(sub) sub.textContent=t('protocol')+' '+id+' · Protokol_'+id+'.pdf';
+  const sbtn=panel&&panel.querySelector('.btn');
+  if(sbtn) sbtn.textContent=t('sendBtn');
+  if(panel){panel.style.display='block';panel.scrollIntoView({behavior:'smooth'});}
+  else{toast(t('pdfReady')+' '+id,6000);}
+  if(proto) showRevolutQR(proto);
+}
+
+async function doSend(){
+  const blob=S._sendBlob,id=S._sendId;
+  if(!blob)return;
+  try{
+    const file=new File([blob],'Protokol_'+id+'.pdf',{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({title:t('protocol')+' '+id,files:[file]});
+      document.getElementById('sendpanel').style.display='none';
+      toast('✅ '+t('sendBtn').replace('⬆ ','').split('(')[0].trim());
+      return;
+    }
+  }catch(e){if(e.name==='AbortError')return;}
+  toast(t('pdfReady'),5000);
+}
+
+function closeSendModal(){
+  const panel=document.getElementById('sendpanel');
+  if(panel) panel.style.display='none';
+  const modal=document.getElementById('sendmodal');
+  if(modal) modal.classList.remove('on');
+}
+
+// ── ARCHIVE MODAL ──────────────────────────────────
+function openAM(id){
+  S.curArchId=id;
+  const item=S.archive.find(x=>x.id===id);if(!item)return;
+  document.getElementById('amtitle').textContent='Protokół '+id+' · '+esc(item.client||'');
+  document.getElementById('amodal').classList.add('on');
+}
+function closeAM(){document.getElementById('amodal').classList.remove('on');}
+
+function amSave(){
+  const item=S.archive.find(x=>x.id===S.curArchId);if(!item)return;
+  const a=document.createElement('a');
+  a.href=item.dataUri;a.download='Protokol_'+S.curArchId+'.pdf';
+  a.style.display='none';document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast('✅ PDF pobrany — sprawdź Pliki → Pobrane');closeAM();
+}
+
+async function amShare(){
+  const item=S.archive.find(x=>x.id===S.curArchId);if(!item)return;
+  try{
+    const b64=item.dataUri.split(',')[1];
+    const bin=atob(b64);
+    const arr=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+    const blob=new Blob([arr],{type:'application/pdf'});
+    const file=new File([blob],'Protokol_'+S.curArchId+'.pdf',{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({title:'Protokol '+S.curArchId,files:[file]});
+      toast('✅ Wyslano!');closeAM();return;
+    }
+    // Fallback: download
+    amSave();
+  }catch(e){
+    if(e.name==='AbortError'){closeAM();}
+    else{amSave();}
+  }
+}
+
+// ── CLIENTS ────────────────────────────────────────
+function avc(n){const cs=['#2563EB','#7C3AED','#DB2777','#D97706','#059669'];return cs[n.charCodeAt(0)%cs.length];}
+function avi(n){return n.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();}
+function renderC(q){
+  const el=document.getElementById('clist');
+  const f=S.clients.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||(c.nip||'').includes(q)||(c.phone||'').includes(q));
+  if(!f.length){el.innerHTML=`<div class="empty">${t('noClients')}</div>`;return;}
+  el.innerHTML=f.map(c=>`<div class="cc" onclick="openCS('${c.id}')"><div class="av" style="width:42px;height:42px;background:${avc(c.name)}22;color:${avc(c.name)};font-size:14px">${avi(c.name)}</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.name)}</div><div style="font-size:13px;color:var(--gr);margin-top:2px">${esc(c.phone||c.nip||c.email||'—')}</div></div><span class="chev">›</span></div>`).join('');
+}
+function openCS(id){
+  S.editCid=id;
+  document.getElementById('cstitle').textContent=id?t('editClient'):t('newClient');
+  document.getElementById('csdel').style.display=id?'block':'none';
+  document.getElementById('cgusmsg').textContent='';document.getElementById('cgusmsg').className='gmsg';
+  const c=id?S.clients.find(x=>x.id===id):null;
+  ['name','nip','phone','email','address','contact'].forEach(k=>document.getElementById('cs-'+k).value=c?(c[k]||''):'');
+  document.getElementById('csover').classList.add('on');
+}
+function closeCS(){document.getElementById('csover').classList.remove('on');}
+function saveC(){
+  const name=document.getElementById('cs-name').value.trim();if(!name)return;
+  const d={id:S.editCid||String(Date.now()),name,nip:gv('cs-nip'),phone:gv('cs-phone'),email:gv('cs-email'),address:gv('cs-address'),contact:gv('cs-contact')};
+  if(S.editCid){const i=S.clients.findIndex(x=>x.id===S.editCid);if(i>=0)S.clients[i]=d;}else S.clients.push(d);
+  closeCS();renderC('');
+}
+function delC(){S.clients=S.clients.filter(x=>x.id!==S.editCid);closeCS();renderC('');}
+function openPicker(){
+  const el=document.getElementById('picklist');
+  if(!S.clients.length){el.innerHTML=`<div style="text-align:center;padding:30px 0;color:var(--lg);font-size:13px">${t('noClientsDB').replace('\n','<br>')}</div>`;}
+  else el.innerHTML=S.clients.map(c=>`<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;margin-bottom:6px;background:var(--bg);cursor:pointer" onclick="pickC('${c.id}')"><div class="av" style="width:38px;height:38px;background:${avc(c.name)}22;color:${avc(c.name)};font-size:13px">${avi(c.name)}</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.name)}</div><div style="font-size:12px;color:var(--gr);margin-top:1px">${esc(c.nip||c.phone||c.email||'—')}</div></div><span style="color:var(--lg);font-size:18px">›</span></div>`).join('');
+  document.getElementById('cpicker').classList.add('on');
+}
+function closePicker(){document.getElementById('cpicker').classList.remove('on');}
+function pickC(id){
+  const c=S.clients.find(x=>x.id===id);if(!c)return;
+  document.getElementById('p-name').value=c.name||'';
+  document.getElementById('p-nip').value=c.nip||'';
+  document.getElementById('p-phone').value=c.phone||'';
+  document.getElementById('p-email').value=c.email||'';
+  document.getElementById('p-address').value=c.address||'';
+  closePicker();
+}
+
+// ── ARCHIVE ────────────────────────────────────────
+function renderA(q){
+  const el=document.getElementById('alist');
+  const f=[...S.archive].reverse().filter(a=>!q||(a.client||'').toLowerCase().includes(q.toLowerCase())||(a.model||'').toLowerCase().includes(q.toLowerCase())||(a.date||'').includes(q));
+  if(!f.length){el.innerHTML=`<div class="empty">${t('noArchive')}</div>`;return;}
+  el.innerHTML=f.map(a=>`<div class="ac" onclick="openAM('${a.id}')"><div class="ai">📄</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.client||'—')}</div><div style="font-size:13px;color:var(--gr);margin-top:2px">${esc(a.model||'—')} · ${a.date} <span style="background:#E8EDFF;color:var(--bl);border-radius:6px;padding:1px 8px;font-size:11px;font-weight:700">${a.type}</span></div><div style="font-size:12px;color:var(--lg);margin-top:2px">Nr: ${a.id}</div></div><span class="chev">›</span></div>`).join('');
+}
+
+// ── FIRMA ──────────────────────────────────────────
+function saveFirma(){
+  S.firma={
+    name:gv('f-name'),nip:gv('f-nip'),phone:gv('f-phone'),
+    email:gv('f-email'),address:gv('f-address'),tech:gv('f-tech'),
+    revolut:gv('f-revolut'),apikey:gv('f-apikey')
+  };
+}
+
+function getApiKey(){
+  return (S.firma.apikey||'').trim();
+}
+
+// Pre-fill Revolut from known default
+window.addEventListener('DOMContentLoaded',()=>{
+  const ri=document.getElementById('f-revolut');
+  if(ri&&!ri.value) ri.value='@sebastkshu';
+  saveFirma();
+});
+
+function doLogo(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const btn=document.getElementById('logobtn');
+    btn.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:contain">`;
+    S.firma.logo=e.target.result;
+  };
+  r.readAsDataURL(f);
+}
+
+// ── QR CODE (Revolut) ──────────────────────────────
+function getRevolutUrl(){
+  const rev=(S.firma.revolut||'').trim();
+  if(!rev) return '';
+  if(rev.startsWith('http')) return rev;
+  const tag=rev.startsWith('@')?rev.slice(1):rev;
+  return 'https://revolut.me/'+tag;
+}
+
+function showRevolutQR(proto){
+  const url=getRevolutUrl();
+  const panel=document.getElementById('qr-panel');
+  if(!panel) return;
+  if(!url||proto.pay!=='revolut'){panel.style.display='none';return;}
+
+  // Compute gross
+  const wn=proto.wPaid?proto.wt*proto.wr:0;
+  const tn=proto.tPaid?proto.tr*proto.trr:0;
+  const pn=proto.parts.filter(p=>p.paid).reduce((s,p)=>s+parseFloat(p.price||0)*parseFloat(p.qty||1),0);
+  const gross=(wn+tn+pn)*1.23;
+
+  const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data='+encodeURIComponent(url);
+  document.getElementById('qr-img').src=qrUrl;
+  document.getElementById('qr-link').textContent=url;
+  document.getElementById('qr-link').href=url;
+  document.getElementById('qr-amount').textContent=gross>0?'Do zapłaty: '+gross.toFixed(2)+' zł brutto':'';
+  panel.style.display='block';
+}
+</script>
+</body>
+</html>
