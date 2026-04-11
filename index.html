@@ -31,30 +31,14 @@ if('serviceWorker' in navigator){
 }
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{height:-webkit-fill-available}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--tx);font-size:15px}
-body{min-height:-webkit-fill-available}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(0,212,232,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 90%,rgba(232,0,106,.10) 0%,transparent 60%);pointer-events:none;z-index:0}
-#app{display:flex;flex-direction:column;width:100%;height:100%;position:fixed;top:0;left:0;right:0;bottom:0;z-index:1}
-
-/* HEADER */
-#hdr{background:#0A0E1A;border-bottom:1px solid rgba(255,255,255,.08);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.logo{display:flex;align-items:baseline;gap:1px}
-.logo .h1{font-weight:700;font-size:22px;letter-spacing:-.5px;color:var(--tx)}
-.logo .h2{font-weight:300;font-size:16px;letter-spacing:.15em;color:var(--tx3)}
-.logo .h3{font-weight:800;font-size:22px;letter-spacing:-.5px;color:var(--cy)}
-.logo .h4{font-weight:300;font-size:13px;letter-spacing:.2em;color:var(--cy);opacity:.6}
-.nbtn{background:rgba(0,212,232,.12);border:1px solid rgba(0,212,232,.3);border-radius:12px;padding:7px 14px;color:var(--cy);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px}
-
-/* PAGES */
-#pages{flex:1;overflow:hidden;position:relative;min-height:0}
-.pg{position:absolute;inset:0;display:none;flex-direction:column}.pg.on{display:flex}
-.scr{flex:1;overflow-y:auto;padding:16px 16px 16px;-webkit-overflow-scrolling:touch}
-
-/* NAV */
-nav{background:#0A0E1A;border-top:1px solid rgba(255,255,255,.08);display:flex;padding:8px 0 20px;flex-shrink:0}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;border:none;background:none;cursor:pointer;color:var(--tx3);font-size:10px;font-weight:600;font-family:inherit;letter-spacing:.04em}
-.tab.on{color:var(--cy)}
+#app{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1}
+#hdr{position:fixed;top:0;left:0;right:0;height:56px;background:#0A0E1A;border-bottom:1px solid rgba(255,255,255,.08);padding:0 20px;display:flex;align-items:center;justify-content:space-between;z-index:100}
+#pages{position:fixed;left:0;right:0;overflow:hidden;background:var(--bg)}
+nav{position:fixed;left:0;right:0;height:70px;background:#0A0E1A;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:flex-start;padding-top:8px;z-index:100}
+.pg{position:absolute;top:0;left:0;right:0;bottom:0;display:none;flex-direction:column;overflow:hidden}.pg.on{display:flex !important}
+.scr{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch}
 
 /* CARDS */
 .card{background:#131929;border:1px solid rgba(255,255,255,.10);border-radius:20px;padding:18px;margin-bottom:12px}
@@ -423,20 +407,20 @@ input.inp, textarea.inp{
     </div>
   </div>
 
-  <nav>
-    <button class="tab on" onclick="goTab('protokol',this)">
+  <nav style="position:fixed;bottom:0;left:0;right:0;height:70px;background:#0A0E1A;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:flex-start;padding-top:8px;z-index:9999">
+    <button class="tab on" onclick="goTab('protokol',this)" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;border:none;background:none;cursor:pointer;color:var(--cy);font-size:10px;font-weight:600;font-family:inherit;letter-spacing:.04em">
       <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       PROTOKÓŁ
     </button>
-    <button class="tab" onclick="goTab('klienci',this)">
+    <button class="tab" onclick="goTab('klienci',this)" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;border:none;background:none;cursor:pointer;color:rgba(240,244,255,.35);font-size:10px;font-weight:600;font-family:inherit;letter-spacing:.04em">
       <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M2 20c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="8" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M22 20c0-2.761-2.239-5-5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       KLIENCI
     </button>
-    <button class="tab" onclick="goTab('archiwum',this)">
+    <button class="tab" onclick="goTab('archiwum',this)" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;border:none;background:none;cursor:pointer;color:rgba(240,244,255,.35);font-size:10px;font-weight:600;font-family:inherit;letter-spacing:.04em">
       <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       ARCHIWUM
     </button>
-    <button class="tab" onclick="goTab('firma',this)">
+    <button class="tab" onclick="goTab('firma',this)" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;border:none;background:none;cursor:pointer;color:rgba(240,244,255,.35);font-size:10px;font-weight:600;font-family:inherit;letter-spacing:.04em">
       <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="14" y="13" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.6"/><path d="M16 13v-1a2 2 0 014 0v1" stroke="currentColor" stroke-width="1.6"/></svg>
       FIRMA
     </button>
@@ -743,15 +727,30 @@ function selCur(btn){
   document.querySelectorAll('[data-cur="'+_wCur+'"]').forEach(b=>b.classList.add('on'));
 }
 
+function fixLayout(){
+  const hdrH=56, navH=70;
+  const wh=window.innerHeight;
+  document.getElementById('pages').style.top=hdrH+'px';
+  document.getElementById('pages').style.height=(wh-hdrH-navH)+'px';
+  document.querySelector('nav').style.top=(wh-navH)+'px';
+}
+window.addEventListener('load',fixLayout);
+window.addEventListener('resize',fixLayout);
+
 function startApp(){
   S.lang=_wLang;
   S.currency=_wCur;
-  document.getElementById('welcome').style.display='none';
+  const wel=document.getElementById('welcome');
+  if(wel) wel.parentNode.removeChild(wel);
   S.id=uid(); S.date=today(); S.type=t('naprawa');
   applyTranslations();
   document.getElementById('pid').textContent='ID: '+S.id;
   document.getElementById('pdate').textContent=S.date;
   markLangCurButtons();
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg-protokol').classList.add('on');
+  renderParts();calcSum();renderSigs();
+  fixLayout();
 }
 
 function applyTranslations(){
@@ -835,9 +834,11 @@ function changeCur(btn){
 // ── NAV ────────────────────────────────────────────
 function goTab(name,btn){
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(tb=>tb.classList.remove('on'));
-  document.getElementById('pg-'+name).classList.add('on');
+  document.querySelectorAll('.tab').forEach(tb=>{tb.classList.remove('on');tb.style.color='rgba(240,244,255,.35)';});
+  const pg = document.getElementById('pg-'+name);
+  if(pg) pg.classList.add('on');
   btn.classList.add('on');
+  btn.style.color='#00D4E8';
   if(name==='archiwum')renderA('');
   if(name==='klienci')renderC('');
 }
